@@ -8,4 +8,8 @@ public interface WalletService {
     Wallet getMyWallet(String username);
    
     Wallet addMoney(BigDecimal amount);
+    
+    Wallet withdrawMoney(BigDecimal amount);
+    
+    void sendMoney(String to,BigDecimal amount);
 }

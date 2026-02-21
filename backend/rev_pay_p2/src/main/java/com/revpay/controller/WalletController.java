@@ -56,6 +56,16 @@ public class WalletController {
         return ResponseEntity.ok(response);
     }
     
+    @PostMapping("/withdraw")
+    public ResponseEntity<?> withdrawMoney(@RequestBody AddMoneyRequest request) {
+        Wallet wallet = walletService.withdrawMoney(request.getAmount());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("walletId", wallet.getId());
+        response.put("balance", wallet.getBalance());
+
+        return ResponseEntity.ok(response);
+    }
     
     
     

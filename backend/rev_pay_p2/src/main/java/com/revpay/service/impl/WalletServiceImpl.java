@@ -61,4 +61,63 @@ public class WalletServiceImpl implements WalletService {
         wallet.setBalance(wallet.getBalance().add(amount));
         return walletRepository.save(wallet);
     }
+
+
+	@Override
+	public Wallet withdrawMoney(BigDecimal amount) {
+		if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+	        throw new RuntimeException("Amount must be greater than zero");
+	    }
+
+	    User user = getCurrentUser();
+	    Wallet wallet = walletRepository.findByUser(user)
+	            .orElseThrow(() -> new RuntimeException("Wallet not found"));
+
+	    if (wallet.getBalance().compareTo(amount) < 0) {
+	        throw new RuntimeException("Insufficient balance");
+	    }
+
+	    wallet.setBalance(wallet.getBalance().subtract(amount));
+	    return walletRepository.save(wallet);
+	}
+
+
+	@Override
+	public void sendMoney(String to, BigDecimal amount) {
+	    if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+	        throw new RuntimeException("Amount must be greater than zero");
+	    }
+
+	    // 1. Sender
+	    User sender = getCurrentUser();
+	    Wallet senderWallet = walletRepository.findByUser(sender)
+	            .orElseThrow(() -> new RuntimeException("Sender wallet not found"));
+
+	    // 2. Receiver
+	    User receiver = userRepository.findByEmail(to)
+	            .or(() -> userRepository.findByPhone(to))
+	            .orElseThrow(() -> new RuntimeException("Receiver not found: " + to));
+
+	    if (sender.getId().equals(receiver.getId())) {
+	        throw new RuntimeException("Cannot send money to yourself");
+	    }
+
+	    Wallet receiverWallet = walletRepository.findByUser(receiver)
+	            .orElseThrow(() -> new RuntimeException("Receiver wallet not found"));
+
+	    // 3. Check balance
+	    if (senderWallet.getBalance().compareTo(amount) < 0) {
+	        throw new RuntimeException("Insufficient balance");
+	    }
+
+	    // 4. Transfer
+	    senderWallet.setBalance(senderWallet.getBalance().subtract(amount));
+	    receiverWallet.setBalance(receiverWallet.getBalance().add(amount));
+
+	    // 5. Save both
+	    walletRepository.save(senderWallet);
+	    walletRepository.save(receiverWallet);
+
+	    // (Later we’ll add Transaction record here)
+	}
 }
