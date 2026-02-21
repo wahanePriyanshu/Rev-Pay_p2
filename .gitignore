@@ -1,0 +1,11 @@
+# Eclipse 
+.metadata/ 
+.classpath 
+.project 
+.settings/ 
+# Maven 
+target/ 
+# Node 
+node_modules/ 
+# Logs 
+*.log 
