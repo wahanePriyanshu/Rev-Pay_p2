@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.revpay.dto.AddMoneyRequest;
+import com.revpay.dto.WalletResponse;
 import com.revpay.entity.Wallet;
 import com.revpay.service.WalletService;
 
@@ -27,44 +28,34 @@ public class WalletController {
 
     // GET /api/wallet/me
     @GetMapping("/me")
-    public Wallet getMyWallet(Authentication authentication) {
-        String username = authentication.getName(); // comes from JWT
-        return walletService.getMyWallet(username);
+    public WalletResponse getMyWallet(Authentication authentication) {
+        String username = authentication.getName();
+        Wallet wallet = walletService.getMyWallet(username);
+
+        return new WalletResponse(wallet.getId(), wallet.getBalance());
     }
 
     // GET /api/wallet/balance
     @GetMapping("/balance")
-    public Map<String, Object> getMyBalance(Authentication authentication) {
+    public WalletResponse getMyBalance(Authentication authentication) {
         String username = authentication.getName();
         Wallet wallet = walletService.getMyWallet(username);
 
-        return Map.of(
-                "walletId", wallet.getId(),
-                "balance", wallet.getBalance()
-        );
+        return new WalletResponse(wallet.getId(), wallet.getBalance());
     }
     
-    
+    //Post/api/wallet/add - to add money in wallet
     @PostMapping("/add")
     public ResponseEntity<?> addMoney(@RequestBody AddMoneyRequest request) {
         Wallet wallet = walletService.addMoney(request.getAmount());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("walletId", wallet.getId());
-        response.put("balance", wallet.getBalance());
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new WalletResponse(wallet.getId(), wallet.getBalance()));
     }
-    
+
+    //Post/wallet/withdraw - to withdraw money from wallet
     @PostMapping("/withdraw")
     public ResponseEntity<?> withdrawMoney(@RequestBody AddMoneyRequest request) {
         Wallet wallet = walletService.withdrawMoney(request.getAmount());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("walletId", wallet.getId());
-        response.put("balance", wallet.getBalance());
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new WalletResponse(wallet.getId(), wallet.getBalance()));
     }
     
     
