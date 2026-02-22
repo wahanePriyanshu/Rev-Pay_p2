@@ -1,11 +1,16 @@
 package com.revpay.service.impl;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.revpay.entity.Transaction;
+import com.revpay.entity.TransactionStatus;
+import com.revpay.entity.TransactionType;
+import com.revpay.repository.TransactionRepository;
 import com.revpay.entity.User;
 import com.revpay.entity.Wallet;
 import com.revpay.repository.UserRepository;
@@ -17,10 +22,14 @@ public class WalletServiceImpl implements WalletService {
 
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
+    private final TransactionRepository transactionRepository;
 
-    public WalletServiceImpl(UserRepository userRepository, WalletRepository walletRepository) {
+    public WalletServiceImpl(UserRepository userRepository, 
+    		WalletRepository walletRepository,
+    		TransactionRepository transactionRepository) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
+        this.transactionRepository = transactionRepository;
     }
     
     
@@ -48,76 +57,116 @@ public class WalletServiceImpl implements WalletService {
 
 
 
-	@Override
-	public Wallet addMoney(BigDecimal amount) {
+    @Override
+    public Wallet addMoney(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Amount must be greater than zero");
         }
 
-        User user = getCurrentUser();   // ✅ now this method exists
+        User user = getCurrentUser();
         Wallet wallet = walletRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
 
         wallet.setBalance(wallet.getBalance().add(amount));
-        return walletRepository.save(wallet);
+        walletRepository.save(wallet);
+
+        Transaction tx = new Transaction();
+        tx.setFromUser(null); // SYSTEM
+        tx.setToUser(user);
+        tx.setAmount(amount);
+        tx.setType(TransactionType.ADD_FUNDS);
+        tx.setStatus(TransactionStatus.SUCCESS);
+        tx.setNote("Add money");
+        tx.setCreatedAt(LocalDateTime.now());
+
+        transactionRepository.save(tx);
+
+        return wallet;
+    }
+
+    @Override
+    public Wallet withdrawMoney(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Amount must be greater than zero");
+        }
+
+        User user = getCurrentUser();
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+
+        if (wallet.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+        walletRepository.save(wallet);
+
+        Transaction tx = new Transaction();
+        tx.setFromUser(user);
+        tx.setToUser(null); // BANK
+        tx.setAmount(amount);
+        tx.setType(TransactionType.WITHDRAW);
+        tx.setStatus(TransactionStatus.SUCCESS);
+        tx.setNote("Withdraw money");
+        tx.setCreatedAt(LocalDateTime.now());
+
+        transactionRepository.save(tx);
+
+        return wallet;
     }
 
 
-	@Override
-	public Wallet withdrawMoney(BigDecimal amount) {
-		if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-	        throw new RuntimeException("Amount must be greater than zero");
-	    }
+    @Override
+    public void sendMoney(String to, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Amount must be greater than zero");
+        }
 
-	    User user = getCurrentUser();
-	    Wallet wallet = walletRepository.findByUser(user)
-	            .orElseThrow(() -> new RuntimeException("Wallet not found"));
+        User sender = getCurrentUser();
+        Wallet senderWallet = walletRepository.findByUser(sender)
+                .orElseThrow(() -> new RuntimeException("Sender wallet not found"));
 
-	    if (wallet.getBalance().compareTo(amount) < 0) {
-	        throw new RuntimeException("Insufficient balance");
-	    }
+        User receiver = userRepository.findByEmail(to)
+                .or(() -> userRepository.findByPhone(to))
+                .orElseThrow(() -> new RuntimeException("Receiver not found: " + to));
 
-	    wallet.setBalance(wallet.getBalance().subtract(amount));
-	    return walletRepository.save(wallet);
-	}
+        if (sender.getId().equals(receiver.getId())) {
+            throw new RuntimeException("Cannot send money to yourself");
+        }
 
+        Wallet receiverWallet = walletRepository.findByUser(receiver)
+                .orElseThrow(() -> new RuntimeException("Receiver wallet not found"));
 
-	@Override
-	public void sendMoney(String to, BigDecimal amount) {
-	    if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-	        throw new RuntimeException("Amount must be greater than zero");
-	    }
+        if (senderWallet.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
 
-	    // 1. Sender
-	    User sender = getCurrentUser();
-	    Wallet senderWallet = walletRepository.findByUser(sender)
-	            .orElseThrow(() -> new RuntimeException("Sender wallet not found"));
+        senderWallet.setBalance(senderWallet.getBalance().subtract(amount));
+        receiverWallet.setBalance(receiverWallet.getBalance().add(amount));
 
-	    // 2. Receiver
-	    User receiver = userRepository.findByEmail(to)
-	            .or(() -> userRepository.findByPhone(to))
-	            .orElseThrow(() -> new RuntimeException("Receiver not found: " + to));
+        walletRepository.save(senderWallet);
+        walletRepository.save(receiverWallet);
 
-	    if (sender.getId().equals(receiver.getId())) {
-	        throw new RuntimeException("Cannot send money to yourself");
-	    }
+        // Sender TX
+        Transaction senderTx = new Transaction();
+        senderTx.setFromUser(sender);
+        senderTx.setToUser(receiver);
+        senderTx.setAmount(amount);
+        senderTx.setType(TransactionType.SEND);
+        senderTx.setStatus(TransactionStatus.SUCCESS);
+        senderTx.setNote("Transfer");
+        senderTx.setCreatedAt(LocalDateTime.now());
+        transactionRepository.save(senderTx);
 
-	    Wallet receiverWallet = walletRepository.findByUser(receiver)
-	            .orElseThrow(() -> new RuntimeException("Receiver wallet not found"));
-
-	    // 3. Check balance
-	    if (senderWallet.getBalance().compareTo(amount) < 0) {
-	        throw new RuntimeException("Insufficient balance");
-	    }
-
-	    // 4. Transfer
-	    senderWallet.setBalance(senderWallet.getBalance().subtract(amount));
-	    receiverWallet.setBalance(receiverWallet.getBalance().add(amount));
-
-	    // 5. Save both
-	    walletRepository.save(senderWallet);
-	    walletRepository.save(receiverWallet);
-
-	    // (Later we’ll add Transaction record here)
-	}
+        // Receiver TX
+        Transaction receiverTx = new Transaction();
+        receiverTx.setFromUser(sender);
+        receiverTx.setToUser(receiver);
+        receiverTx.setAmount(amount);
+        receiverTx.setType(TransactionType.RECEIVE);
+        receiverTx.setStatus(TransactionStatus.SUCCESS);
+        receiverTx.setNote("Transfer");
+        receiverTx.setCreatedAt(LocalDateTime.now());
+        transactionRepository.save(receiverTx);
+    }
 }
