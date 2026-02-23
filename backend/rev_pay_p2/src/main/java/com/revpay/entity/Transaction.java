@@ -102,7 +102,13 @@ public class Transaction {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
+	
+	@PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
+	
    
     
 }

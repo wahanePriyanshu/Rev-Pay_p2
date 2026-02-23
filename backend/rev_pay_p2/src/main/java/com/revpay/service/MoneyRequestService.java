@@ -12,5 +12,9 @@ public interface MoneyRequestService {
 	
 	List<MoneyRequestResponse> getIncomingRequests();
     List<MoneyRequestResponse> getOutgoingRequests();
+    
+    void acceptRequest(Long requestId);
+    void declineRequest(Long requestId);
+    
 	
 }

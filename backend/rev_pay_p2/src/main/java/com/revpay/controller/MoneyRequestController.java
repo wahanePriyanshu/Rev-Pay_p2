@@ -2,7 +2,9 @@ package com.revpay.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,5 +44,17 @@ public class MoneyRequestController {
 	@GetMapping("/outgoing")
 	public List<MoneyRequestResponse >outgoing(){
 		return moneyRequestService.getOutgoingRequests();
+	}
+	
+	@PostMapping("/{id}/accept")
+	public ResponseEntity<?>accept(@PathVariable Long id){
+		moneyRequestService.acceptRequest(id);
+		return ResponseEntity.ok("Request accept successfully");
+	}
+	
+	@PostMapping("/{id}/decline")
+	public ResponseEntity<?>decline(@PathVariable Long id){
+		moneyRequestService.declineRequest(id);
+		return ResponseEntity.ok("Request declined successfully");
 	}
 }
