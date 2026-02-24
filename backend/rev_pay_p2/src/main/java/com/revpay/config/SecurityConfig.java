@@ -33,6 +33,8 @@ public class SecurityConfig {
                         "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/transactions/**").authenticated()
                 .requestMatchers("/api/profile/**").authenticated()
+                .requestMatchers("/api/business/**").authenticated()
+                .requestMatchers("/api/invoices/**").hasRole("BUSINESS")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
