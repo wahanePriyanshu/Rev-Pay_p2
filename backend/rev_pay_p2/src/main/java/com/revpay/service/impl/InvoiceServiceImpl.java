@@ -24,6 +24,7 @@ import com.revpay.repository.InvoiceItemRepository;
 import com.revpay.repository.InvoiceRepository;
 import com.revpay.repository.UserRepository;
 import com.revpay.service.InvoiceService;
+import com.revpay.service.NotificationService;
 
 @Service
 public class InvoiceServiceImpl implements InvoiceService {
@@ -32,15 +33,18 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceItemRepository invoiceItemRepository;
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
+    private final NotificationService notificationService;
 
     public InvoiceServiceImpl(InvoiceRepository invoiceRepository,
                               InvoiceItemRepository invoiceItemRepository,
                               UserRepository userRepository,
-                              CustomerRepository customerRepository) {
+                              CustomerRepository customerRepository,
+                              NotificationService notificationService) {
         this.invoiceRepository = invoiceRepository;
         this.invoiceItemRepository = invoiceItemRepository;
         this.userRepository = userRepository;
         this.customerRepository =customerRepository;
+        this.notificationService=notificationService;
     }
 
     @Override
@@ -50,6 +54,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         User businessUser = getCurrentUser();
         Customer customer = customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
+        if (!customer.getBusinessUser().getId().equals(businessUser.getId())) {
+            throw new RuntimeException("This customer does not belong to your business");
+        }
+        
         Invoice invoice = new Invoice();
         invoice.setBusinessUser(businessUser);
         invoice.setCustomer(customer);
@@ -59,7 +67,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         // 1) Calculate total FIRST
         BigDecimal total = BigDecimal.ZERO;
 
-        List<InvoiceItem> savedItems = new ArrayList<>();
+        
         
         for (InvoiceItemRequest itemReq : request.getItems()) {
 
@@ -83,6 +91,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         // 3) Now save invoice (no NULL total_amount)
         Invoice savedInvoice = invoiceRepository.save(invoice);
 
+        List<InvoiceItem> savedItems = new ArrayList<>();
+        
+        
+        
         // 4) Save items
         for (InvoiceItemRequest itemReq : request.getItems()) {
             InvoiceItem item = new InvoiceItem();
@@ -93,6 +105,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             item.setTax(itemReq.getTax() != null ? itemReq.getTax() : BigDecimal.ZERO);
 
             invoiceItemRepository.save(item);
+            savedItems.add(invoiceItemRepository.save(item));
         }
 
         savedInvoice.setItems(savedItems);
@@ -126,6 +139,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional
     public InvoiceResponse markInvoiceAsPaid(Long invoiceId) {
         User businessUser = getCurrentUser();
+
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
 
@@ -133,8 +147,23 @@ public class InvoiceServiceImpl implements InvoiceService {
             throw new RuntimeException("Not authorized");
         }
 
+        // state rules
+        if (invoice.getStatus() != InvoiceStatus.SENT) {
+            throw new RuntimeException("Only SENT invoices can be marked as PAID");
+        }
+
         invoice.setStatus(InvoiceStatus.PAID);
-        return mapToResponse(invoiceRepository.save(invoice));
+        Invoice saved = invoiceRepository.save(invoice);
+
+        // Notify business (you can also notify customer later)
+        notificationService.createNotification(
+                businessUser.getId(),
+                "INVOICE",
+                "Invoice Paid",
+                "Invoice #" + saved.getId() + " has been marked as PAID"
+        );
+
+        return mapToResponse(saved);
     }
 
     // ---------------- Helpers ----------------
@@ -172,5 +201,72 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         res.setItems(items);
         return res;
+    }
+
+    @Override
+    @Transactional
+    public InvoiceResponse sendInvoice(Long invoiceId) {
+        User businessUser = getCurrentUser();
+
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+
+        // ownership check
+        if (!invoice.getBusinessUser().getId().equals(businessUser.getId())) {
+            throw new RuntimeException("Not authorized to send this invoice");
+        }
+
+        // state rule
+        if (invoice.getStatus() != InvoiceStatus.DRAFT) {
+            throw new RuntimeException("Only DRAFT invoices can be sent");
+        }
+
+        invoice.setStatus(InvoiceStatus.SENT);
+        Invoice saved = invoiceRepository.save(invoice);
+
+        //  Notify customer (simple version)
+        notificationService.createNotification( 
+        		saved.getCustomer().getBusinessUser().getId(),
+                 "INVOICE",
+                "Invoice Sent", 
+                "Invoice #" + saved.getId() + " has been sent to customer " + saved.getCustomer().getName()
+        );
+
+        return mapToResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public InvoiceResponse cancelInvoice(Long invoiceId) {
+        User businessUser = getCurrentUser();
+
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+
+        // ownership check
+        if (!invoice.getBusinessUser().getId().equals(businessUser.getId())) {
+            throw new RuntimeException("Not authorized to cancel this invoice");
+        }
+
+        // state rules
+        if (invoice.getStatus() == InvoiceStatus.PAID) {
+            throw new RuntimeException("Paid invoice cannot be cancelled");
+        }
+
+        if (invoice.getStatus() == InvoiceStatus.CANCELLED) {
+            throw new RuntimeException("Invoice already cancelled");
+        }
+
+        invoice.setStatus(InvoiceStatus.CANCELLED);
+        Invoice saved = invoiceRepository.save(invoice);
+        
+        notificationService.createNotification(
+                businessUser.getId(),
+                "INVOICE",
+                "Invoice Cancelled",
+                "Invoice #" + saved.getId() + " has been cancelled"
+        );
+
+        return mapToResponse(saved);
     }
 }

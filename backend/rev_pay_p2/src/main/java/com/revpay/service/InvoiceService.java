@@ -14,4 +14,8 @@ public interface InvoiceService {
     InvoiceResponse getInvoiceById(Long invoiceId);
 
     InvoiceResponse markInvoiceAsPaid(Long invoiceId);
+    
+    InvoiceResponse sendInvoice(Long invoiceId);
+
+    InvoiceResponse cancelInvoice(Long invoiceId);
 }

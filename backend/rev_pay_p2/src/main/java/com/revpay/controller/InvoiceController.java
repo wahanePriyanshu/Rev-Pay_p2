@@ -37,4 +37,17 @@ public class InvoiceController {
     public ResponseEntity<InvoiceResponse> markAsPaid(@PathVariable Long id) {
         return ResponseEntity.ok(invoiceService.markInvoiceAsPaid(id));
     }
+    
+    @PutMapping("/{id}/send")
+    public ResponseEntity<InvoiceResponse> sendInvoice(@PathVariable Long id) {
+        return ResponseEntity.ok(invoiceService.sendInvoice(id));
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<InvoiceResponse> cancelInvoice(@PathVariable Long id) {
+        return ResponseEntity.ok(invoiceService.cancelInvoice(id));
+    }
+    
+    
+    
 }
