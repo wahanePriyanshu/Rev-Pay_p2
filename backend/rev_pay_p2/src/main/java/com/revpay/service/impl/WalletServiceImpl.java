@@ -5,16 +5,19 @@ import java.time.LocalDateTime;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.revpay.entity.Transaction;
 import com.revpay.entity.TransactionStatus;
 import com.revpay.entity.TransactionType;
-import com.revpay.repository.TransactionRepository;
 import com.revpay.entity.User;
 import com.revpay.entity.Wallet;
+import com.revpay.repository.TransactionRepository;
 import com.revpay.repository.UserRepository;
 import com.revpay.repository.WalletRepository;
+import com.revpay.service.NotificationService;
 import com.revpay.service.WalletService;
 
 @Service
@@ -23,13 +26,20 @@ public class WalletServiceImpl implements WalletService {
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
+    private final NotificationService notificationService;
+    private final PasswordEncoder passwordEncoder;
+    
 
     public WalletServiceImpl(UserRepository userRepository, 
     		WalletRepository walletRepository,
-    		TransactionRepository transactionRepository) {
+    		TransactionRepository transactionRepository,
+    		NotificationService notificationService,
+    		PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
+        this.notificationService= notificationService;
+        this.passwordEncoder = passwordEncoder;
     }
     
     
@@ -41,6 +51,22 @@ public class WalletServiceImpl implements WalletService {
                 .or(() -> userRepository.findByPhone(username))
                 .orElseThrow(() -> new RuntimeException("User not found: " + username));
     }
+    
+    private void verifyTransactionPin(User user, String rawPin) {
+        if (user.getTransactionPin() == null) {
+            throw new RuntimeException("Transaction PIN is not set");
+        }
+        if (rawPin == null || rawPin.isBlank()) {
+            throw new RuntimeException("Transaction PIN is required");
+        }
+        if (!passwordEncoder.matches(rawPin, user.getTransactionPin())) {
+            throw new RuntimeException("Invalid transaction PIN");
+        }
+    }
+    
+    
+    
+    
     
     
     
@@ -80,17 +106,28 @@ public class WalletServiceImpl implements WalletService {
         tx.setCreatedAt(LocalDateTime.now());
 
         transactionRepository.save(tx);
+        
+        notificationService.createNotification(
+        	    user.getId(),
+        	    "",
+        	    "Money Added",
+        	    "₹" + amount + " added to your wallet"
+        	);
+        
+        
+        
 
         return wallet;
     }
 
     @Override
-    public Wallet withdrawMoney(BigDecimal amount) {
+    public Wallet withdrawMoney(BigDecimal amount,String pin) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Amount must be greater than zero");
         }
 
         User user = getCurrentUser();
+        verifyTransactionPin(user,pin);
         Wallet wallet = walletRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
 
@@ -111,18 +148,27 @@ public class WalletServiceImpl implements WalletService {
         tx.setCreatedAt(LocalDateTime.now());
 
         transactionRepository.save(tx);
+        notificationService.createNotification(
+        	    user.getId(),
+        	    "",
+        	    "Money Withdrawn",
+        	    "₹" + amount + " withdrawn from your wallet"
+        	);
+        
+        
 
         return wallet;
     }
 
 
     @Override
-    public void sendMoney(String to, BigDecimal amount) {
+    public void sendMoney(String to, BigDecimal amount ,String pin) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Amount must be greater than zero");
         }
 
         User sender = getCurrentUser();
+        verifyTransactionPin(sender,pin);
         Wallet senderWallet = walletRepository.findByUser(sender)
                 .orElseThrow(() -> new RuntimeException("Sender wallet not found"));
 
@@ -157,6 +203,14 @@ public class WalletServiceImpl implements WalletService {
         senderTx.setNote("Transfer");
         senderTx.setCreatedAt(LocalDateTime.now());
         transactionRepository.save(senderTx);
+        
+     // Notify sender
+        notificationService.createNotification(
+            sender.getId(),
+            "TRANSACTION",
+            "Money Sent",
+            "You sent ₹" + amount + " to " + receiver.getEmail()
+        );
 
         // Receiver TX
         Transaction receiverTx = new Transaction();
@@ -168,5 +222,20 @@ public class WalletServiceImpl implements WalletService {
         receiverTx.setNote("Transfer");
         receiverTx.setCreatedAt(LocalDateTime.now());
         transactionRepository.save(receiverTx);
+        
+
+     // Notify receiver
+     notificationService.createNotification(
+         receiver.getId(),
+         "TRANSACTION",
+         "Money Received",
+         "You received ₹" + amount + " from " + sender.getEmail()
+     );
+      
+        
     }
+    
+    
+    
+    
 }

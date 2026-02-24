@@ -7,11 +7,16 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.revpay.dto.CreateMoneyRequestDto;
 import com.revpay.dto.MoneyRequestResponse;
 import com.revpay.entity.MoneyRequest;
+import com.revpay.entity.Transaction;
+import com.revpay.entity.TransactionStatus;
+import com.revpay.entity.TransactionType;
 import com.revpay.entity.User;
 import com.revpay.entity.Wallet;
 import com.revpay.repository.MoneyRequestRepository;
@@ -19,10 +24,7 @@ import com.revpay.repository.TransactionRepository;
 import com.revpay.repository.UserRepository;
 import com.revpay.repository.WalletRepository;
 import com.revpay.service.MoneyRequestService;
-import com.revpay.entity.Transaction;
-import com.revpay.entity.TransactionType;
-import com.revpay.entity.TransactionStatus;
-
+import com.revpay.service.NotificationService;
 
 import jakarta.transaction.Transactional;
 
@@ -34,15 +36,21 @@ public class MoneyRequestServiceImpl implements MoneyRequestService {
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
+    private final NotificationService notificationService;
+    private final PasswordEncoder passwordEncoder;
 
     public MoneyRequestServiceImpl(MoneyRequestRepository moneyRequestRepository,
                                    UserRepository userRepository,
                                    WalletRepository walletRepository,
-                                   TransactionRepository transactionRepository) {
+                                   TransactionRepository transactionRepository,
+                                   NotificationService notificationService,
+                                   PasswordEncoder passwordEncoder) {
         this.moneyRequestRepository = moneyRequestRepository;
         this.userRepository = userRepository;
 		this.walletRepository = walletRepository;
 		this.transactionRepository = transactionRepository;
+		this.notificationService= notificationService;
+		this.passwordEncoder = passwordEncoder;
     }
 	
 
@@ -55,6 +63,24 @@ public class MoneyRequestServiceImpl implements MoneyRequestService {
                 .or(() -> userRepository.findByPhone(username))
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+	
+	
+	private void verifyTransactionPin(User user, String rawPin) {
+	    if (user.getTransactionPin() == null) {
+	        throw new RuntimeException("Transaction PIN is not set");
+	    }
+	    if (rawPin == null || rawPin.isBlank()) {
+	        throw new RuntimeException("Transaction PIN is required");
+	    }
+	    if (!passwordEncoder.matches(rawPin, user.getTransactionPin())) {
+	        throw new RuntimeException("Invalid transaction PIN");
+	    }
+	}
+	
+	
+	
+	
+	
 	
 	
 	@Override
@@ -83,6 +109,14 @@ public class MoneyRequestServiceImpl implements MoneyRequestService {
 		req.setCreatedAt(LocalDateTime.now());
 		
 		MoneyRequest saved = moneyRequestRepository.save(req);
+		
+		//Requested created
+		notificationService.createNotification(
+			    receiver.getId(),
+			    "REQUEST",
+			    "New Money Request",
+			    requester.getEmail() + " requested ₹" + dto.getAmount()
+			);
 		
 		return new MoneyRequestResponse(
                 saved.getId(),
@@ -138,8 +172,9 @@ public class MoneyRequestServiceImpl implements MoneyRequestService {
 
 	@Transactional
 	@Override
-	public void acceptRequest(Long requestId) {
+	public void acceptRequest(Long requestId,String pin) {
 		User current = getCurrentUser();
+		verifyTransactionPin(current,pin);
 		
 		MoneyRequest req = moneyRequestRepository.findById(requestId)
 				.orElseThrow(()-> new RuntimeException("Request not found"));
@@ -180,6 +215,11 @@ public class MoneyRequestServiceImpl implements MoneyRequestService {
 	    sendTx.setStatus(TransactionStatus.SUCCESS);
 	    sendTx.setNote("Money request accepted");
 	    transactionRepository.save(sendTx);
+	    
+	    
+	    
+	    
+	    
 
 	    // Create RECEIVE transaction
 	    Transaction receiveTx = new Transaction();
@@ -194,6 +234,19 @@ public class MoneyRequestServiceImpl implements MoneyRequestService {
 	    //  Update request status
 	    req.setStatus(MoneyRequest.Status.ACCEPTED);
 	    moneyRequestRepository.save(req);
+	    
+	    //Request accepted
+	    notificationService.createNotification(
+	    	    req.getRequester().getId(),
+	    	    "REQUEST",
+	    	    "Request Accepted",
+	    	    "Your request of ₹" + amount + " was accepted by " + current.getEmail()
+	    	);
+	    
+	    
+	    
+	    
+	    
 
 	  
 	}
@@ -218,6 +271,15 @@ public class MoneyRequestServiceImpl implements MoneyRequestService {
 
 	    req.setStatus(MoneyRequest.Status.DECLINED);
 	    moneyRequestRepository.save(req);
+	    
+	    //request declined
+	    notificationService.createNotification(
+	    	    req.getRequester().getId(),
+	    	    "REQUEST",
+	    	    "Request Declined",
+	    	    "Your request of ₹" + req.getAmount() + " was declined by " + current.getEmail()
+	    	);
+	    
 		
 		
 		

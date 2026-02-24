@@ -44,17 +44,18 @@ public class WalletController {
         return new WalletResponse(wallet.getId(), wallet.getBalance());
     }
     
-    //Post/api/wallet/add - to add money in wallet
+    
+    //POST /api/wallet/add/
     @PostMapping("/add")
     public ResponseEntity<?> addMoney(@RequestBody AddMoneyRequest request) {
         Wallet wallet = walletService.addMoney(request.getAmount());
         return ResponseEntity.ok(new WalletResponse(wallet.getId(), wallet.getBalance()));
     }
 
-    //Post/wallet/withdraw - to withdraw money from wallet
+    //POST/api/wallet/withdraw
     @PostMapping("/withdraw")
     public ResponseEntity<?> withdrawMoney(@RequestBody AddMoneyRequest request) {
-        Wallet wallet = walletService.withdrawMoney(request.getAmount());
+        Wallet wallet = walletService.withdrawMoney(request.getAmount(),request.getPin());
         return ResponseEntity.ok(new WalletResponse(wallet.getId(), wallet.getBalance()));
     }
     

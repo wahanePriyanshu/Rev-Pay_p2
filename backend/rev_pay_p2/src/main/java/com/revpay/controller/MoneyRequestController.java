@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.revpay.dto.AcceptRequestDto;
 import com.revpay.dto.CreateMoneyRequestDto;
 import com.revpay.dto.MoneyRequestResponse;
 import com.revpay.service.MoneyRequestService;
@@ -47,8 +48,9 @@ public class MoneyRequestController {
 	}
 	
 	@PostMapping("/{id}/accept")
-	public ResponseEntity<?>accept(@PathVariable Long id){
-		moneyRequestService.acceptRequest(id);
+	public ResponseEntity<?>accept(@PathVariable Long id,
+									@RequestBody  AcceptRequestDto request){
+		moneyRequestService.acceptRequest(id,request.getPin());
 		return ResponseEntity.ok("Request accept successfully");
 	}
 	

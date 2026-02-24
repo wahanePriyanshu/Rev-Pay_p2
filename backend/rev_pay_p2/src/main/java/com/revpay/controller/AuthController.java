@@ -2,9 +2,11 @@ package com.revpay.controller;
 
 import com.revpay.config.JwtUtil;
 import com.revpay.dto.RegisterRequest;
+import com.revpay.entity.NotificationPreference;
 import com.revpay.entity.Role;
 import com.revpay.entity.User;
 import com.revpay.entity.Wallet;
+import com.revpay.repository.NotificationPreferenceRepository;
 import com.revpay.repository.RoleRepository;
 import com.revpay.repository.UserRepository;
 import com.revpay.repository.WalletRepository;
@@ -27,19 +29,21 @@ public class AuthController {
     private final RoleRepository roleRepository;
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final  NotificationPreferenceRepository notificationPreferenceRepository;
     public AuthController(AuthenticationManager authenticationManager,
                           JwtUtil jwtUtil,
                           UserRepository userRepository,
                           RoleRepository roleRepository,
                           WalletRepository walletRepository,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          NotificationPreferenceRepository notificationPreferenceRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.walletRepository = walletRepository;
         this.passwordEncoder = passwordEncoder;
+        this.notificationPreferenceRepository=notificationPreferenceRepository;
     }
 
     // ---------- LOGIN ----------
@@ -98,6 +102,19 @@ public class AuthController {
 
         // 4. Save User
         User savedUser = userRepository.save(user);
+        
+        //auto create preference when user register- notification 
+        
+        NotificationPreference pref = new NotificationPreference();
+        pref.setUser(savedUser);
+        pref.setTransactionAlert(true);
+        pref.setRequestAlert(true);
+        pref.setLowBalanceAlert(true);
+
+        notificationPreferenceRepository.save(pref);
+        
+        
+        
 
         // 5. Create Wallet
         Wallet wallet = new Wallet();

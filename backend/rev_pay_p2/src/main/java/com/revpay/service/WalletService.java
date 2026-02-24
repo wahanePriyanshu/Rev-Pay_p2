@@ -9,7 +9,7 @@ public interface WalletService {
    
     Wallet addMoney(BigDecimal amount);
     
-    Wallet withdrawMoney(BigDecimal amount);
+    Wallet withdrawMoney(BigDecimal amount,String pin);
     
-    void sendMoney(String to,BigDecimal amount);
+	void sendMoney(String to, BigDecimal amount, String pin);
 }

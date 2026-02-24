@@ -72,7 +72,31 @@ public class User {
         return email;
     }
 
-    public String getPhone() {
+    public String getTransactionPin() {
+		return transactionPin;
+	}
+
+	public void setTransactionPin(String transactionPin) {
+		this.transactionPin = transactionPin;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+
+	public String getPhone() {
         return phone;
     }
 
@@ -115,4 +139,6 @@ public class User {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
+    
+    
 }

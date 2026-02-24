@@ -23,7 +23,7 @@ public class TransferController {
 	
 	@PostMapping("/send")
     public ResponseEntity<?> sendMoney(@RequestBody SendMoneyRequest request) {
-        walletService.sendMoney(request.getTo(), request.getAmount());
+        walletService.sendMoney(request.getTo(), request.getAmount(),request.getPin());
 
         return ResponseEntity.ok(Map.of(
                 "message", "Money sent successfully",
