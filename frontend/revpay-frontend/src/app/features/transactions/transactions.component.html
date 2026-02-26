@@ -1,0 +1,60 @@
+<div class="transactions-page">
+  <h2 class="mb-3">Transactions</h2>
+
+  <div class="input-group mb-3">
+    <span class="input-group-text">
+      🔍
+    </span>
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Search by name, note, or status"
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="applySearch()"
+    >
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Type</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Note</th>
+            <th>Created at</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tx of filteredTransactions; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>
+              <span
+                class="badge"
+                [ngClass]="tx.type === 'SEND' ? 'bg-danger' : 'bg-success'"
+              >
+                {{ tx.type }}
+              </span>
+            </td>
+            <td>{{ tx.from }}</td>
+            <td>{{ tx.to }}</td>
+            <td>{{ tx.amount }}</td>
+            <td>{{ tx.status }}</td>
+            <td>{{ tx.note }}</td>
+            <td>{{ tx.createdAt }}</td>
+          </tr>
+          <tr *ngIf="!filteredTransactions.length">
+            <td colspan="8" class="text-center text-muted py-3">
+              No transactions found
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

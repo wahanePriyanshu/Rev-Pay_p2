@@ -1,0 +1,144 @@
+<div class="wallet-page">
+  <h2 class="mb-3">Wallet</h2>
+
+  <div class="card mb-3">
+    <div class="card-body d-flex justify-content-between align-items-center">
+      <div>
+        <div class="text-muted small">Current balance</div>
+        <div class="h3 mb-0">{{ balance | currency:currency }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="btn-group flex-wrap mb-3" role="group">
+    <button type="button" class="btn btn-outline-primary me-2 mb-2" (click)="setView('send')">
+      Send money
+    </button>
+    <button type="button" class="btn btn-outline-primary me-2 mb-2" (click)="setView('add')">
+      Add money
+    </button>
+    <button type="button" class="btn btn-outline-primary me-2 mb-2" (click)="setView('withdraw')">
+      Withdraw
+    </button>
+    <button type="button" class="btn btn-outline-primary me-2 mb-2" (click)="setView('request')">
+      Request money
+    </button>
+    <button type="button" class="btn btn-outline-secondary me-2 mb-2" (click)="setView('incoming')">
+      Incoming
+    </button>
+    <button type="button" class="btn btn-outline-secondary mb-2" (click)="setView('outgoing')">
+      Outgoing
+    </button>
+  </div>
+
+  <div *ngIf="message" class="alert alert-success">{{ message }}</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <!-- Forms / lists -->
+  <div [ngSwitch]="activeView">
+    <!-- Send money -->
+    <form *ngSwitchCase="'send'" [formGroup]="sendForm" (ngSubmit)="submitSend()" class="card p-3">
+      <h5>Send money</h5>
+      <div class="mb-2">
+        <label class="form-label">To (email)</label>
+        <input type="email" class="form-control" formControlName="to">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Amount</label>
+        <input type="number" class="form-control" formControlName="amount">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Note</label>
+        <input type="text" class="form-control" formControlName="note">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">PIN</label>
+        <input type="password" class="form-control" formControlName="pin">
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="loading">Send</button>
+    </form>
+
+    <!-- Add money -->
+    <form *ngSwitchCase="'add'" [formGroup]="addForm" (ngSubmit)="submitAdd()" class="card p-3">
+      <h5>Add money</h5>
+      <div class="mb-2">
+        <label class="form-label">Amount</label>
+        <input type="number" class="form-control" formControlName="amount">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">PIN</label>
+        <input type="password" class="form-control" formControlName="pin">
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="loading">Add</button>
+    </form>
+
+    <!-- Withdraw -->
+    <form *ngSwitchCase="'withdraw'" [formGroup]="withdrawForm" (ngSubmit)="submitWithdraw()" class="card p-3">
+      <h5>Withdraw</h5>
+      <div class="mb-2">
+        <label class="form-label">Amount</label>
+        <input type="number" class="form-control" formControlName="amount">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">PIN</label>
+        <input type="password" class="form-control" formControlName="pin">
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="loading">Withdraw</button>
+    </form>
+
+    <!-- Request money -->
+    <form *ngSwitchCase="'request'" [formGroup]="requestForm" (ngSubmit)="submitRequest()" class="card p-3">
+      <h5>Request money</h5>
+      <div class="mb-2">
+        <label class="form-label">To (email)</label>
+        <input type="email" class="form-control" formControlName="to">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Amount</label>
+        <input type="number" class="form-control" formControlName="amount">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Purpose</label>
+        <input type="text" class="form-control" formControlName="purpose">
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="loading">Send request</button>
+    </form>
+
+    <!-- Incoming requests -->
+    <div *ngSwitchCase="'incoming'" class="card p-3">
+      <h5>Incoming requests</h5>
+      <div *ngIf="!incomingRequests.length" class="text-muted">No incoming requests</div>
+      <div *ngFor="let r of incomingRequests" class="border-bottom py-2">
+        <div class="d-flex justify-content-between">
+          <span><strong>{{ r.from }}</strong> → you</span>
+          <span>{{ r.amount | currency:currency }}</span>
+        </div>
+        <div class="small text-muted">
+          {{ r.purpose }} • {{ r.status }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Outgoing requests -->
+    <div *ngSwitchCase="'outgoing'" class="card p-3">
+      <h5>Outgoing requests</h5>
+      <div *ngIf="!outgoingRequests.length" class="text-muted">No outgoing requests</div>
+      <div *ngFor="let r of outgoingRequests" class="border-bottom py-2">
+        <div class="d-flex justify-content-between">
+          <span>you → <strong>{{ r.to }}</strong></span>
+          <span>{{ r.amount | currency:currency }}</span>
+        </div>
+        <div class="small text-muted">
+          {{ r.purpose }} • {{ r.status }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Default overview -->
+    <div *ngSwitchDefault>
+      <p class="text-muted">Choose an action above to manage your wallet.</p>
+    </div>
+  </div>
+</div>
+

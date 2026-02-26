@@ -1,0 +1,70 @@
+<div class="container">
+  <div class="card">
+    <h2 class="title">Sign up now</h2>
+
+    <form [formGroup]="regiForm" class="form" (ngSubmit)="submit()">
+
+      <!-- Full Name -->
+      <input formControlName="fullName" type="text" placeholder="Enter full name" class="input" />
+      <div *ngIf="regiForm.controls['fullName'].invalid && regiForm.controls['fullName'].touched" class="error">
+        <small>Full name is required</small>
+      </div>
+
+      <!-- Email -->
+      <input formControlName="email" type="email" placeholder="Enter email" class="input" />
+      <div *ngIf="regiForm.controls['email'].invalid && regiForm.controls['email'].touched" class="error">
+        <small *ngIf="regiForm.controls['email'].errors?.['required']">Email is required</small>
+        <small *ngIf="regiForm.controls['email'].errors?.['email']">Invalid email</small>
+      </div>
+
+      <!-- Phone -->
+      <input formControlName="phone" type="text" placeholder="Enter phone number" class="input" />
+      <div *ngIf="regiForm.controls['phone'].invalid && regiForm.controls['phone'].touched" class="error">
+        <small>Phone is required</small>
+      </div>
+
+      <!-- Account Type -->
+      <div class="radio-group">
+        <label class="radio-label">Select Account Type</label>
+        <div class="radio-options">
+          <label>
+            <input type="radio" formControlName="role" value="ROLE_PERSONAL" />
+            Personal
+          </label>
+          <label>
+            <input type="radio" formControlName="role" value="ROLE_BUSINESS" />
+            Business
+          </label>
+        </div>
+        <div *ngIf="regiForm.controls['role'].invalid && regiForm.controls['role'].touched" class="error">
+          <small>Account type is required</small>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <input formControlName="password" type="password" placeholder="Choose a password" class="input" />
+      <div *ngIf="regiForm.controls['password'].invalid && regiForm.controls['password'].touched" class="error">
+        <small *ngIf="regiForm.controls['password'].errors?.['required']">Password is required</small>
+        <small *ngIf="regiForm.controls['password'].errors?.['minlength']">Minimum 6 characters</small>
+      </div>
+
+      <!-- Confirm Password -->
+      <input formControlName="confirmPassword" type="password" placeholder="Confirm password" class="input" />
+      <div *ngIf="regiForm.controls['confirmPassword'].invalid && regiForm.controls['confirmPassword'].touched" class="error">
+        <small>Confirm password is required</small>
+      </div>
+
+      <!-- Button -->
+      <button type="submit" class="btn" [disabled]="regiForm.invalid || loading">
+        <span *ngIf="!loading">Sign up</span>
+        <span *ngIf="loading" class="spinner-border spinner-border-sm"></span>
+      </button>
+
+      <span class="login-text">
+        Already a member?
+        <a routerLink="/auth/login" class="link">Login Here</a>
+      </span>
+
+    </form>
+  </div>
+</div>

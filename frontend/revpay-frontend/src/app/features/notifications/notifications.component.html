@@ -1,0 +1,92 @@
+<div class="notifications-page">
+  <h2 class="mb-3">Notifications</h2>
+
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+      <button
+        class="nav-link"
+        [class.active]="activeTab === 'all'"
+        (click)="setTab('all')"
+      >
+        All
+      </button>
+    </li>
+    <li class="nav-item">
+      <button
+        class="nav-link"
+        [class.active]="activeTab === 'unread'"
+        (click)="setTab('unread')"
+      >
+        Unread
+      </button>
+    </li>
+    <li class="nav-item">
+      <button
+        class="nav-link"
+        [class.active]="activeTab === 'preferences'"
+        (click)="setTab('preferences')"
+      >
+        Preferences
+      </button>
+    </li>
+  </ul>
+
+  <div class="d-flex justify-content-between align-items-center mb-2" *ngIf="activeTab !== 'preferences'">
+    <div class="small text-muted">
+      {{ unreadNotifications.length }} unread
+    </div>
+    <button class="btn btn-sm btn-outline-primary" (click)="markAllRead()" [disabled]="!unreadNotifications.length || loading">
+      Mark all read
+    </button>
+  </div>
+
+  <div *ngIf="message" class="alert alert-success">{{ message }}</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <!-- All / unread notifications -->
+  <div *ngIf="activeTab === 'all' || activeTab === 'unread'">
+    <div class="list-group">
+      <div
+        *ngFor="let n of (activeTab === 'all' ? notifications : unreadNotifications)"
+        class="list-group-item d-flex justify-content-between align-items-start"
+        [ngClass]="{ 'bg-light': !n.read }"
+      >
+        <div>
+          <div class="fw-semibold">{{ n.title }}</div>
+          <div class="small text-muted">{{ n.message }}</div>
+        </div>
+        <div class="small text-muted">
+          {{ n.createdAt | date:'short' }}
+        </div>
+      </div>
+      <div *ngIf="(activeTab === 'all' ? notifications : unreadNotifications).length === 0" class="text-muted py-3 text-center">
+        No notifications
+      </div>
+    </div>
+  </div>
+
+  <!-- Preferences -->
+  <form *ngIf="activeTab === 'preferences'" (ngSubmit)="savePreferences()" class="card p-3">
+    <h5 class="mb-3">Notification preferences</h5>
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="emailEnabled" [(ngModel)]="preferences.emailEnabled" name="emailEnabled">
+      <label class="form-check-label" for="emailEnabled">
+        Email notifications
+      </label>
+    </div>
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="smsEnabled" [(ngModel)]="preferences.smsEnabled" name="smsEnabled">
+      <label class="form-check-label" for="smsEnabled">
+        SMS notifications
+      </label>
+    </div>
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="pushEnabled" [(ngModel)]="preferences.pushEnabled" name="pushEnabled">
+      <label class="form-check-label" for="pushEnabled">
+        Push notifications
+      </label>
+    </div>
+    <button type="submit" class="btn btn-primary" [disabled]="loading">Save</button>
+  </form>
+</div>
+

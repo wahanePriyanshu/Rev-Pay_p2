@@ -1,0 +1,75 @@
+<div class="sidebar sidebar-dark sidebar-fixed"
+     [ngClass]="{'sidebar-hide': !isOpen}">
+
+  <div class="sidebar-content">
+    <!-- Sidebar Nav -->
+    <ul class="sidebar-nav">
+      <li class="nav-item">
+        <a class="nav-link"
+           routerLink="/dashboard"
+           routerLinkActive="active">
+          <i class="nav-icon cil-speedometer"></i>
+          Dashboard
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link"
+           routerLink="/wallet"
+           routerLinkActive="active">
+          <i class="nav-icon cil-wallet"></i>
+          Wallet
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link"
+           routerLink="/transactions"
+           routerLinkActive="active">
+          <i class="nav-icon cil-wallet"></i>
+          Transactions
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link"
+           routerLink="/notifications"
+           routerLinkActive="active">
+          <i class="nav-icon cil-bell"></i>
+          Notifications
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link"
+           routerLink="/invoices"
+           routerLinkActive="active">
+          <i class="nav-icon cil-receipt"></i>
+          Invoices
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Profile section at bottom -->
+  <div class="sidebar-footer">
+    <button class="profile-toggle" type="button" (click)="toggleProfileMenu()">
+      <div class="avatar-circle">U</div>
+      <div class="profile-text">
+        <div class="name">User</div>
+        <div class="subtitle">View profile</div>
+      </div>
+      <span class="chevron" [ngClass]="{ 'open': showProfileMenu }">▾</span>
+    </button>
+
+    <div class="profile-menu" *ngIf="showProfileMenu">
+      <button type="button" class="menu-item" (click)="goToProfile()">
+        Profile
+      </button>
+      <button type="button" class="menu-item text-danger" (click)="logout()">
+        Logout
+      </button>
+    </div>
+  </div>
+
+</div>

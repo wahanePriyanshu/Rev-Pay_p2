@@ -1,0 +1,26 @@
+<div class="vh-100 d-flex flex-column overflow-hidden">
+
+  <app-toast></app-toast>
+
+  <!-- 🔵 FULL WIDTH NAVBAR -->
+  <app-navbar
+    (toggleSidebar)="toggleSidebar()">
+  </app-navbar>
+
+ 
+  <div class="d-flex flex-grow-1 overflow-hidden">
+
+    <!-- Sidebar -->
+    <app-sidebar
+      [isOpen]="sidebarOpen"
+      (toggleSidebarEvent)="toggleSidebar()">
+    </app-sidebar>
+
+    <!-- Content -->
+    <div class="flex-grow-1 container-fluid p-4 bg-light overflow-auto">
+      <router-outlet></router-outlet>
+    </div>
+
+  </div>
+
+</div>

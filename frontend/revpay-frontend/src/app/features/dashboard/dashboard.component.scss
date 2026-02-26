@@ -1,0 +1,16 @@
+.dashboard {
+  .card {
+    border-radius: 0.75rem;
+  }
+
+  .transaction-row + .transaction-row {
+    border-top: 1px solid #f1f3f5;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    font-weight: 600;
+  }
+}
+

@@ -1,6 +1,21 @@
 package com.revpay.controller;
 
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.revpay.config.JwtUtil;
+import com.revpay.dto.LoginRequest;
+import com.revpay.dto.LoginResponse;
 import com.revpay.dto.RegisterRequest;
 import com.revpay.entity.NotificationPreference;
 import com.revpay.entity.Role;
@@ -10,14 +25,6 @@ import com.revpay.repository.NotificationPreferenceRepository;
 import com.revpay.repository.RoleRepository;
 import com.revpay.repository.UserRepository;
 import com.revpay.repository.WalletRepository;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,6 +36,7 @@ public class AuthController {
     private final RoleRepository roleRepository;
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
+    
     private final  NotificationPreferenceRepository notificationPreferenceRepository;
     public AuthController(AuthenticationManager authenticationManager,
                           JwtUtil jwtUtil,
@@ -48,24 +56,25 @@ public class AuthController {
 
     // ---------- LOGIN ----------
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody Map<String, String> request) {
-
-        String username = request.get("username");
-        
-     // Allow email key also
-        if (username == null) {
-            username = request.get("email");
-        }
-        
-        String password = request.get("password");
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
+            new UsernamePasswordAuthenticationToken(request.getEmailOrPhone(), request.getPassword())
         );
 
-        String token = jwtUtil.generateToken(username);
+        User user = userRepository.findByEmailOrPhone(
+                request.getEmailOrPhone(),
+                request.getEmailOrPhone()
+        ).orElseThrow(() -> new RuntimeException("User not found"));
 
-        return Map.of("token", token);
+        String token = jwtUtil.generateToken(user);
+
+        LoginResponse response = new LoginResponse();
+        response.setToken(token);
+        response.setUserId(user.getId());
+        response.setRole(user.getRoles().iterator().next().getName());
+
+        return ResponseEntity.ok(response);
     }
 
     // ---------- REGISTER ----------
@@ -88,16 +97,26 @@ public class AuthController {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setIsActive(true);
 
-        // 3. Assign Role
+     // 3. Assign Role
         String roleName = request.getRole();
+
+        // Default role
         if (roleName == null || roleName.isBlank()) {
-            roleName = "ROLE_PERSONAL";
+            roleName = "PERSONAL";
         }
 
-        final String finalRoleName = roleName;
+        // Normalize
+        roleName = roleName.toUpperCase();
 
-        Role role = roleRepository.findByName(finalRoleName)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + finalRoleName));
+        // Convert "PERSONAL" -> "ROLE_PERSONAL", "BUSINESS" -> "ROLE_BUSINESS"
+        if (!roleName.startsWith("ROLE_")) {
+            roleName = "ROLE_" + roleName;
+        }
+
+        // Fetch from DB
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+
         user.setRoles(Set.of(role));
 
         // 4. Save User

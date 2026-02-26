@@ -1,0 +1,130 @@
+<div class="dashboard">
+  <!-- Header / User overview -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Welcome back, {{ userName }}</h2>
+      <p class="text-muted mb-0">{{ userEmail }}</p>
+    </div>
+    <button class="btn btn-primary">
+      Add Money
+    </button>
+  </div>
+
+  <!-- Top cards: Wallet + quick stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="card-title mb-0">Wallet Balance</h5>
+            <span class="badge bg-success">Active</span>
+          </div>
+          <p class="display-6 fw-semibold mb-2">{{ formattedBalance }}</p>
+          <p class="text-muted mb-0 small">
+            Last updated: Today
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title mb-2">Total Received</h5>
+          <p class="h3 text-success mb-1">+ $1,920.00</p>
+          <p class="text-muted small mb-0">
+            In the last 30 days
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title mb-2">Total Sent</h5>
+          <p class="h3 text-danger mb-1">- $740.00</p>
+          <p class="text-muted small mb-0">
+            In the last 30 days
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content: Transactions + Users to send money -->
+  <div class="row g-3">
+    <!-- Recent transactions -->
+    <div class="col-lg-8">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Recent Transactions</h5>
+            <a class="small text-primary" routerLink="/wallet">View all</a>
+          </div>
+
+          <div *ngIf="transactions.length; else noTransactions">
+            <div *ngFor="let tx of transactions" class="transaction-row d-flex align-items-center py-2">
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between">
+                  <span class="fw-semibold">{{ tx.description }}</span>
+                  <span
+                    class="fw-semibold"
+                    [ngClass]="{
+                      'text-success': tx.amount > 0,
+                      'text-danger': tx.amount < 0
+                    }"
+                  >
+                    {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount | currency:walletCurrency }}
+                  </span>
+                </div>
+                <div class="d-flex justify-content-between small text-muted">
+                  <span>{{ tx.id }}</span>
+                  <span>{{ tx.date }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noTransactions>
+            <p class="text-muted mb-0">No transactions yet.</p>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users to send money -->
+    <div class="col-lg-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Send Money</h5>
+          <p class="text-muted small">
+            Quick access to your favourite users. Click on a user to start a transfer.
+          </p>
+
+          <div class="list-group">
+            <button
+              type="button"
+              class="list-group-item list-group-item-action d-flex align-items-center"
+              *ngFor="let user of favoriteUsers"
+              (click)="onSendMoney(user)"
+            >
+              <div
+                class="avatar rounded-circle d-flex justify-content-center align-items-center me-3 text-white"
+                [ngStyle]="{ 'background-color': user.avatarColor }"
+              >
+                {{ getInitials(user.name) }}
+              </div>
+              <div class="flex-grow-1">
+                <div class="fw-semibold">{{ user.name }}</div>
+                <div class="small text-muted">Tap to send money</div>
+              </div>
+              <span class="text-primary small fw-semibold">Send</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
