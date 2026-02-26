@@ -1,0 +1,58 @@
+<div class="business-page">
+  <h2 class="mb-3">Business account</h2>
+
+  <div *ngIf="business; else registerTpl">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title mb-3">{{ business.businessName }}</h5>
+        <p class="mb-1"><strong>Type:</strong> {{ business.businessType }}</p>
+        <p class="mb-1"><strong>Tax ID:</strong> {{ business.taxId }}</p>
+        <p class="mb-1"><strong>Address:</strong> {{ business.businessAddress }}</p>
+        <p class="mb-0">
+          <strong>Verification status:</strong>
+          <span class="badge"
+                [ngClass]="{
+                  'bg-warning text-dark': business.verificationStatus === 'PENDING',
+                  'bg-success': business.verificationStatus === 'APPROVED',
+                  'bg-danger': business.verificationStatus === 'REJECTED'
+                }">
+            {{ business.verificationStatus }}
+          </span>
+        </p>
+      </div>
+    </div>
+    <p class="text-muted">
+      Once your business is approved, you can fully use invoices, loans and analytics.
+    </p>
+  </div>
+
+  <ng-template #registerTpl>
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Apply for business account</h5>
+        <form [formGroup]="registerForm" (ngSubmit)="submitRegister()">
+          <div class="mb-2">
+            <label class="form-label">Business name</label>
+            <input type="text" class="form-control" formControlName="businessName">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Business type</label>
+            <input type="text" class="form-control" formControlName="businessType">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Tax ID</label>
+            <input type="text" class="form-control" formControlName="taxId">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Business address</label>
+            <textarea class="form-control" rows="2" formControlName="businessAddress"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" [disabled]="registering">
+            Submit application
+          </button>
+        </form>
+      </div>
+    </div>
+  </ng-template>
+</div>
+

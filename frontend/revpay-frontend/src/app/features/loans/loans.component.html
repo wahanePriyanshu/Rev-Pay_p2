@@ -1,0 +1,69 @@
+<div class="loans-page">
+  <h2 class="mb-3">Loans</h2>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title mb-3">Apply for a loan</h5>
+      <form [formGroup]="loanForm" (ngSubmit)="submitLoan()">
+        <div class="row g-2">
+          <div class="col-md-4 mb-2">
+            <label class="form-label">Amount</label>
+            <input type="number" class="form-control" formControlName="amount">
+          </div>
+          <div class="col-md-4 mb-2">
+            <label class="form-label">Tenure (months)</label>
+            <input type="number" class="form-control" formControlName="tenureMonths">
+          </div>
+          <div class="col-md-4 mb-2">
+            <label class="form-label">Purpose</label>
+            <input type="text" class="form-control" formControlName="purpose">
+          </div>
+        </div>
+        <button class="btn btn-primary mt-2" type="submit" [disabled]="applying">
+          Apply
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title mb-3">Your loans</h5>
+      <div *ngIf="loading" class="text-muted">Loading loans...</div>
+      <div class="table-responsive" *ngIf="!loading">
+        <table class="table table-sm align-middle">
+          <thead>
+          <tr>
+            <th>#</th>
+            <th>ID</th>
+            <th>Amount</th>
+            <th>Purpose</th>
+            <th>Tenure</th>
+            <th>Interest rate</th>
+            <th>Status</th>
+            <th>Created at</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let loan of loans; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ loan.id }}</td>
+            <td>{{ loan.amount }}</td>
+            <td>{{ loan.purpose }}</td>
+            <td>{{ loan.tenureMonths }} months</td>
+            <td>{{ loan.interestRate }}%</td>
+            <td>{{ loan.status }}</td>
+            <td>{{ loan.createdAt }}</td>
+          </tr>
+          <tr *ngIf="!loans.length">
+            <td colspan="8" class="text-center text-muted py-3">
+              No loans yet.
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+

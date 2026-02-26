@@ -9,6 +9,7 @@ interface UiTransaction {
   description: string;
   amount: number;
   type: 'credit' | 'debit';
+  createdAt: string;
 }
 
 interface UserRecipient {
@@ -32,6 +33,8 @@ export class DashboardComponent implements OnInit {
   walletCurrency = 'USD';
 
   transactions: UiTransaction[] = [];
+  totalReceivedLast30 = 0;
+  totalSentLast30 = 0;
 
   favoriteUsers: UserRecipient[] = [
     { id: 1, name: 'Alice', avatarColor: '#4e73df' },
@@ -89,8 +92,10 @@ export class DashboardComponent implements OnInit {
           date: new Date(tx.createdAt).toLocaleString(),
           description: this.buildDescription(tx),
           amount: tx.type === 'SEND' ? -tx.amount : tx.amount,
-          type: tx.type === 'SEND' ? 'debit' : 'credit'
+          type: tx.type === 'SEND' ? 'debit' : 'credit',
+          createdAt: tx.createdAt
         }));
+        this.computeTotals();
       },
       error: () => {
         // leave list empty on error
@@ -113,6 +118,44 @@ export class DashboardComponent implements OnInit {
       style: 'currency',
       currency: this.walletCurrency
     }).format(this.walletBalance);
+  }
+
+  get formattedTotalReceived(): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: this.walletCurrency
+    }).format(this.totalReceivedLast30);
+  }
+
+  get formattedTotalSent(): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: this.walletCurrency
+    }).format(this.totalSentLast30);
+  }
+
+  private computeTotals(): void {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    let received = 0;
+    let sent = 0;
+
+    for (const tx of this.transactions) {
+      const txDate = new Date(tx.createdAt);
+      if (txDate < thirtyDaysAgo) {
+        continue;
+      }
+
+      if (tx.amount > 0) {
+        received += tx.amount;
+      } else if (tx.amount < 0) {
+        sent += -tx.amount;
+      }
+    }
+
+    this.totalReceivedLast30 = received;
+    this.totalSentLast30 = sent;
   }
 
   getInitials(name: string): string {

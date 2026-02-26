@@ -40,12 +40,21 @@
         </a>
       </li>
 
-      <li class="nav-item">
+      <li class="nav-item" *ngIf="isBusiness">
         <a class="nav-link"
            routerLink="/invoices"
            routerLinkActive="active">
           <i class="nav-icon cil-receipt"></i>
           Invoices
+        </a>
+      </li>
+
+      <li class="nav-item" *ngIf="isBusiness">
+        <a class="nav-link"
+           routerLink="/loans"
+           routerLinkActive="active">
+          <i class="nav-icon cil-bank"></i>
+          Loans
         </a>
       </li>
     </ul>

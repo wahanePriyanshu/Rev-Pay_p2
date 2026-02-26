@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.revpay.dto.ChangePasswordRequest;
+import com.revpay.dto.ProfileResponse;
 import com.revpay.dto.UpdateProfileRequest;
 import com.revpay.entity.User;
 import com.revpay.repository.UserRepository;
@@ -131,6 +132,26 @@ public class ProfileServiceImpl implements ProfileService {
             throw new RuntimeException("PIN must be 4 to 6 digits");
         }
     }
+
+	@Override
+	public ProfileResponse getProfile() {
+		String email = SecurityContextHolder.getContext()
+	            .getAuthentication()
+	            .getName();
+
+	    User user = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    return new ProfileResponse(
+	            user.getFullName(),
+	            user.getEmail(),
+	            user.getPhone(),
+	            user.getRoles()
+	                .stream()
+	                .map(role -> role.getName())   // or role.name() if enum
+	                .toList()
+	    );
+	}
 		
 	
 	

@@ -1,0 +1,111 @@
+<div class="invoices-page">
+  <h2 class="mb-3">Invoices</h2>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title mb-3">Create invoice</h5>
+      <form [formGroup]="invoiceForm" (ngSubmit)="submitInvoice()">
+        <div class="row g-2">
+          <div class="col-md-4 mb-2">
+            <label class="form-label">Customer</label>
+            <select class="form-select" formControlName="customerId">
+              <option [ngValue]="null">Select customer</option>
+              <option *ngFor="let c of customers" [ngValue]="c.id">
+                {{ c.name }} ({{ c.email }})
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Due date</label>
+            <input type="date" class="form-control" formControlName="dueDate">
+          </div>
+          <div class="col-md-5 mb-2">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control" formControlName="description">
+          </div>
+        </div>
+        <div class="row g-2 mt-1">
+          <div class="col-md-2 mb-2">
+            <label class="form-label">Quantity</label>
+            <input type="number" class="form-control" formControlName="quantity">
+          </div>
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Unit price</label>
+            <input type="number" class="form-control" formControlName="unitPrice">
+          </div>
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Tax</label>
+            <input type="number" class="form-control" formControlName="tax">
+          </div>
+          <div class="col-md-4 d-flex align-items-end mb-2">
+            <button class="btn btn-primary" type="submit" [disabled]="creating">
+              Create invoice
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title mb-3">All invoices</h5>
+      <div *ngIf="loading" class="text-muted">Loading invoices...</div>
+      <div class="table-responsive" *ngIf="!loading">
+        <table class="table table-sm align-middle">
+          <thead>
+          <tr>
+            <th>#</th>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Due date</th>
+            <th>Created at</th>
+            <th>Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let inv of invoices; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ inv.id }}</td>
+            <td>{{ inv.customerId }}</td>
+            <td>{{ inv.totalAmount }}</td>
+            <td>
+              <span class="badge"
+                    [ngClass]="{
+                      'bg-secondary': inv.status === 'DRAFT',
+                      'bg-primary': inv.status === 'SENT',
+                      'bg-success': inv.status === 'PAID',
+                      'bg-warning text-dark': inv.status === 'OVERDUE',
+                      'bg-danger': inv.status === 'CANCELLED'
+                    }">
+                {{ inv.status }}
+              </span>
+            </td>
+            <td>{{ inv.dueDate }}</td>
+            <td>{{ inv.createdAt }}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary me-1" (click)="sendInvoice(inv.id)">
+                Send
+              </button>
+              <button class="btn btn-sm btn-outline-success me-1" (click)="markPaid(inv.id)">
+                Mark paid
+              </button>
+              <button class="btn btn-sm btn-outline-danger" (click)="cancelInvoice(inv.id)">
+                Cancel
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!invoices.length">
+            <td colspan="8" class="text-center text-muted py-3">
+              No invoices yet.
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+

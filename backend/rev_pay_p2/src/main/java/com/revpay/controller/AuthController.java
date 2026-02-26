@@ -30,117 +30,107 @@ import com.revpay.repository.WalletRepository;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final WalletRepository walletRepository;
-    private final PasswordEncoder passwordEncoder;
-    
-    private final  NotificationPreferenceRepository notificationPreferenceRepository;
-    public AuthController(AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil,
-                          UserRepository userRepository,
-                          RoleRepository roleRepository,
-                          WalletRepository walletRepository,
-                          PasswordEncoder passwordEncoder,
-                          NotificationPreferenceRepository notificationPreferenceRepository) {
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.walletRepository = walletRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.notificationPreferenceRepository=notificationPreferenceRepository;
-    }
+	private final AuthenticationManager authenticationManager;
+	private final JwtUtil jwtUtil;
+	private final UserRepository userRepository;
+	private final RoleRepository roleRepository;
+	private final WalletRepository walletRepository;
+	private final PasswordEncoder passwordEncoder;
 
-    // ---------- LOGIN ----------
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+	private final NotificationPreferenceRepository notificationPreferenceRepository;
 
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.getEmailOrPhone(), request.getPassword())
-        );
+	public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserRepository userRepository,
+			RoleRepository roleRepository, WalletRepository walletRepository, PasswordEncoder passwordEncoder,
+			NotificationPreferenceRepository notificationPreferenceRepository) {
+		this.authenticationManager = authenticationManager;
+		this.jwtUtil = jwtUtil;
+		this.userRepository = userRepository;
+		this.roleRepository = roleRepository;
+		this.walletRepository = walletRepository;
+		this.passwordEncoder = passwordEncoder;
+		this.notificationPreferenceRepository = notificationPreferenceRepository;
+	}
 
-        User user = userRepository.findByEmailOrPhone(
-                request.getEmailOrPhone(),
-                request.getEmailOrPhone()
-        ).orElseThrow(() -> new RuntimeException("User not found"));
+	// ---------- LOGIN ----------
+	@PostMapping("/login")
+	public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
 
-        String token = jwtUtil.generateToken(user);
+		Authentication authentication = authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(request.getEmailOrPhone(), request.getPassword()));
 
-        LoginResponse response = new LoginResponse();
-        response.setToken(token);
-        response.setUserId(user.getId());
-        response.setRole(user.getRoles().iterator().next().getName());
+		User user = userRepository.findByEmailOrPhone(request.getEmailOrPhone(), request.getEmailOrPhone())
+				.orElseThrow(() -> new RuntimeException("User not found"));
 
-        return ResponseEntity.ok(response);
-    }
+		String token = jwtUtil.generateToken(user);
 
-    // ---------- REGISTER ----------
-    @PostMapping("/register")
-    public Map<String, String> register(@RequestBody RegisterRequest request) {
+		LoginResponse response = new LoginResponse();
+		response.setToken(token);
+		response.setUserId(user.getId());
+		response.setRole(user.getRoles().iterator().next().getName());
 
-        // 1. Check if user already exists
-        if (request.getEmail() != null && userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already registered");
-        }
-        if (request.getPhone() != null && userRepository.findByPhone(request.getPhone()).isPresent()) {
-            throw new RuntimeException("Phone already registered");
-        }
+		return ResponseEntity.ok(response);
+	}
 
-        // 2. Create User
-        User user = new User();
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setIsActive(true);
+	// ---------- REGISTER ----------
+	@PostMapping("/register")
+	public Map<String, String> register(@RequestBody RegisterRequest request) {
 
-     // 3. Assign Role
-        String roleName = request.getRole();
+		// 1. Check if user already exists
+		if (request.getEmail() != null && userRepository.findByEmail(request.getEmail()).isPresent()) {
+			throw new RuntimeException("Email already registered");
+		}
+		if (request.getPhone() != null && userRepository.findByPhone(request.getPhone()).isPresent()) {
+			throw new RuntimeException("Phone already registered");
+		}
 
-        // Default role
-        if (roleName == null || roleName.isBlank()) {
-            roleName = "PERSONAL";
-        }
+		// 2. Create User
+		User user = new User();
+		user.setFullName(request.getFullName());
+		user.setEmail(request.getEmail());
+		user.setPhone(request.getPhone());
+		user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+		user.setIsActive(true);
 
-        // Normalize
-        roleName = roleName.toUpperCase();
+		// 3. Assign Role
+		String roleName = request.getRole();
 
-        // Convert "PERSONAL" -> "ROLE_PERSONAL", "BUSINESS" -> "ROLE_BUSINESS"
-        if (!roleName.startsWith("ROLE_")) {
-            roleName = "ROLE_" + roleName;
-        }
+		// Default role
+		if (roleName == null || roleName.isBlank()) {
+			roleName = "PERSONAL";
+		}
 
-        // Fetch from DB
-        Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+		// Normalize
+		roleName = roleName.toUpperCase();
 
-        user.setRoles(Set.of(role));
+		// Convert "PERSONAL" -> "ROLE_PERSONAL", "BUSINESS" -> "ROLE_BUSINESS"
+		if (!roleName.startsWith("ROLE_")) {
+			roleName = "ROLE_" + roleName;
+		}
 
-        // 4. Save User
-        User savedUser = userRepository.save(user);
-        
-        //auto create preference when user register- notification 
-        
-        NotificationPreference pref = new NotificationPreference();
-        pref.setUser(savedUser);
-        pref.setTransactionAlert(true);
-        pref.setRequestAlert(true);
-        pref.setLowBalanceAlert(true);
+		// Fetch from DB
+		Role role = roleRepository.findByName(roleName).orElseThrow(() -> new RuntimeException("Role not found"));
 
-        notificationPreferenceRepository.save(pref);
-        
-        
-        
+		user.setRoles(Set.of(role));
 
-        // 5. Create Wallet
-        Wallet wallet = new Wallet();
-        wallet.setUser(savedUser);
-        wallet.setBalance(java.math.BigDecimal.ZERO);
-        walletRepository.save(wallet);
+		// 4. Save User
+		User savedUser = userRepository.save(user);
 
-        return Map.of("message", "User registered successfully");
-    }
+		// auto create preference when user register- notification
+
+		NotificationPreference pref = new NotificationPreference();
+		pref.setUser(savedUser);
+		pref.setTransactionAlert(true);
+		pref.setRequestAlert(true);
+		pref.setLowBalanceAlert(true);
+
+		notificationPreferenceRepository.save(pref);
+
+		// 5. Create Wallet
+		Wallet wallet = new Wallet();
+		wallet.setUser(savedUser);
+		wallet.setBalance(java.math.BigDecimal.ZERO);
+		walletRepository.save(wallet);
+
+		return Map.of("message", "User registered successfully");
+	}
 }

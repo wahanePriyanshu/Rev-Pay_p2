@@ -7,6 +7,10 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { WalletComponent } from './features/wallet/wallet.component';
 import { TransactionsComponent } from './features/transactions/transactions.component';
 import { NotificationsComponent } from './features/notifications/notifications.component';
+import { ProfileComponent } from './features/profile/profile.component';
+import { BusinessComponent } from './features/business/business.component';
+import { InvoicesComponent } from './features/invoices/invoices.component';
+import { LoansComponent } from './features/loans/loans.component';
 
 export const routes: Routes = [
   {
@@ -34,6 +38,22 @@ export const routes: Routes = [
       {
         path: 'notifications',
         component: NotificationsComponent
+      },
+      {
+        path: 'profile',
+        component: ProfileComponent
+      },
+      {
+        path: 'business',
+        component: BusinessComponent
+      },
+      {
+        path: 'invoices',
+        component: InvoicesComponent
+      },
+      {
+        path: 'loans',
+        component: LoansComponent
       }
       // later: user, business, admin dashboards here
     ]

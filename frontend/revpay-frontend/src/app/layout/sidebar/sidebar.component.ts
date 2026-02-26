@@ -1,4 +1,4 @@
-import { Component, Input, EventEmitter, Output } from '@angular/core';
+import { Component, Input, EventEmitter, Output, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -12,17 +12,26 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.scss']
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
 
   @Input() isOpen: boolean = true;
   @Output() toggleSidebarEvent = new EventEmitter<void>();
 
   showProfileMenu = false;
+  role: string | null = null;
 
   constructor(
     private auth: AuthService,
     private router: Router
   ) {}
+
+  ngOnInit(): void {
+    this.role = this.auth.getRole();
+  }
+
+  get isBusiness(): boolean {
+    return this.role === 'ROLE_BUSINESS';
+  }
 
   toggleProfileMenu() {
     this.showProfileMenu = !this.showProfileMenu;
