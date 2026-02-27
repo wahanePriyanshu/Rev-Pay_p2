@@ -5,9 +5,9 @@
       <h2 class="mb-1">Welcome back, {{ userName }}</h2>
       <p class="text-muted mb-0">{{ userEmail }}</p>
     </div>
-    <button class="btn btn-primary">
+    <!-- <button class="btn btn-primary">
       Add Money
-    </button>
+    </button> -->
   </div>
 
   <!-- Top cards: Wallet + quick stats -->
@@ -63,8 +63,8 @@
             <a class="small text-primary" routerLink="/wallet">View all</a>
           </div>
 
-          <div *ngIf="transactions.length; else noTransactions">
-            <div *ngFor="let tx of transactions" class="transaction-row d-flex align-items-center py-2">
+          <div *ngIf="transactions().length; else noTransactions">
+            <div *ngFor="let tx of transactions()" class="transaction-row d-flex align-items-center py-2">
               <div class="flex-grow-1">
                 <div class="d-flex justify-content-between">
                   <span class="fw-semibold">{{ tx.description }}</span>

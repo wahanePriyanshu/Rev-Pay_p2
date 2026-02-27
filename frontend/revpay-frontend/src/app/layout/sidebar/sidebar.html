@@ -15,11 +15,12 @@
 
       <li class="nav-item">
         <a class="nav-link"
-           routerLink="/wallet"
-           routerLinkActive="active">
-          <i class="nav-icon cil-wallet"></i>
-          Wallet
-        </a>
+   [routerLink]="['/wallet']"
+   routerLinkActive="active"
+   [routerLinkActiveOptions]="{ exact: true }">
+  <i class="nav-icon cil-wallet"></i>
+  Wallet
+</a>
       </li>
 
       <li class="nav-item">

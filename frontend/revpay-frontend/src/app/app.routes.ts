@@ -25,35 +25,43 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        component: DashboardComponent
+        component: DashboardComponent,
+        runGuardsAndResolvers: 'always'
       },
       {
         path: 'wallet',
-        component: WalletComponent
+        component: WalletComponent,
+        runGuardsAndResolvers: 'always'
       },
       {
         path: 'transactions',
-        component: TransactionsComponent
+        component: TransactionsComponent,
+        runGuardsAndResolvers: 'always'
       },
       {
         path: 'notifications',
-        component: NotificationsComponent
+        component: NotificationsComponent,
+        runGuardsAndResolvers: 'always'
       },
       {
         path: 'profile',
-        component: ProfileComponent
+        component: ProfileComponent,
+        runGuardsAndResolvers: 'always'
       },
       {
         path: 'business',
-        component: BusinessComponent
+        component: BusinessComponent,
+        runGuardsAndResolvers: 'always'
       },
       {
         path: 'invoices',
-        component: InvoicesComponent
+        component: InvoicesComponent,
+        runGuardsAndResolvers: 'always'
       },
       {
         path: 'loans',
-        component: LoansComponent
+        component: LoansComponent,
+        runGuardsAndResolvers: 'always'
       }
       // later: user, business, admin dashboards here
     ]

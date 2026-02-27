@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {  FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { WalletService } from '../../core/services/wallet.service';
 import { TransferService } from '../../core/services/transfer.service';
 import { MoneyRequestService } from '../../core/services/money-request.service';
+import { FormsModule } from '@angular/forms';
 
 type WalletView =
   | 'overview'
@@ -17,13 +18,13 @@ type WalletView =
 @Component({
   selector: 'app-wallet',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './wallet.component.html',
   styleUrls: ['./wallet.component.scss']
 })
 export class WalletComponent implements OnInit {
   balance = 0;
-  currency = 'USD';
+  currency = 'INR';
 
   activeView: WalletView = 'overview';
 
@@ -38,6 +39,11 @@ export class WalletComponent implements OnInit {
   loading = false;
   message: string | null = null;
   error: string | null = null;
+
+  //PIN model
+  selectedRequest: any = null;
+pinInput: string = '';
+showPinModal = false;
 
   constructor(
     private walletService: WalletService,
@@ -204,5 +210,70 @@ export class WalletComponent implements OnInit {
       }
     });
   }
+
+acceptRequest(request: any): void {
+
+  const pin=prompt('Enter your transaction PIN ');
+  if(!pin) return;
+  this.moneyRequestService.acceptRequest(request.id, pin).subscribe({
+    next: () => {
+      request.status = 'ACCEPTED';
+      this.loadBalance(); // refresh wallet balance
+      this.message = 'Request accepted successfully';
+    },
+    error: () => {
+      this.error = 'Failed to accept request';
+    }
+  });
+}
+
+declineRequest(request: any): void {
+  this.moneyRequestService.declineRequest(request.id).subscribe({
+    next: () => {
+      request.status = 'DECLINED';
+      this.message = 'Request declined';
+    },
+    error: () => {
+      this.error = 'Failed to decline request';
+    }
+  });
+}
+
+
+openPinModal(request: any) {
+  this.selectedRequest = request;
+  this.pinInput = '';
+  this.showPinModal = true;
+}
+
+confirmAccept() {
+  if (!this.pinInput || this.pinInput.length < 4) {
+    this.error = 'Enter valid 4-digit PIN';
+    return;
+  }
+
+  this.moneyRequestService
+    .acceptRequest(this.selectedRequest.id, this.pinInput)
+    .subscribe({
+      next: () => {
+        this.selectedRequest.status = 'ACCEPTED';
+        this.loadBalance();
+        this.showPinModal = false;
+        this.message = 'Request accepted successfully';
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Invalid PIN';
+      }
+    });
+}
+
+closePinModal() {
+  this.showPinModal = false;
+}
+
+
+
+
+
 }
 

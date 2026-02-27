@@ -49,12 +49,12 @@ public class MoneyRequestController {
 	
 	@PostMapping("/{id}/accept")
 	public ResponseEntity<?>accept(@PathVariable Long id,
-									@RequestBody  AcceptRequestDto request){
-		moneyRequestService.acceptRequest(id,request.getPin());
+									@RequestBody  AcceptRequestDto dto){
+		moneyRequestService.acceptRequest(id,dto.getPin());
 		return ResponseEntity.ok("Request accept successfully");
 	}
 	
-	@PostMapping("/{id}/decline")
+	@PostMapping("/{id}/decline")  
 	public ResponseEntity<?>decline(@PathVariable Long id){
 		moneyRequestService.declineRequest(id);
 		return ResponseEntity.ok("Request declined successfully");

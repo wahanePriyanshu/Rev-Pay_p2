@@ -106,19 +106,72 @@
     </form>
 
     <!-- Incoming requests -->
-    <div *ngSwitchCase="'incoming'" class="card p-3">
-      <h5>Incoming requests</h5>
-      <div *ngIf="!incomingRequests.length" class="text-muted">No incoming requests</div>
-      <div *ngFor="let r of incomingRequests" class="border-bottom py-2">
-        <div class="d-flex justify-content-between">
-          <span><strong>{{ r.from }}</strong> → you</span>
-          <span>{{ r.amount | currency:currency }}</span>
-        </div>
-        <div class="small text-muted">
-          {{ r.purpose }} • {{ r.status }}
-        </div>
+    <!-- Incoming requests -->
+<div *ngSwitchCase="'incoming'" class="card p-3">
+  <h5>Incoming requests</h5>
+
+  <div *ngIf="!incomingRequests.length" class="text-muted">
+    No incoming requests
+  </div>
+
+  <div *ngFor="let r of incomingRequests"
+       class="border-bottom py-2 d-flex justify-content-between align-items-start">
+
+    <!-- Left side -->
+    <div>
+      <div>
+        <strong>{{ r.from }}</strong> → you
+      </div>
+
+      <div class="small text-muted">
+        {{ r.purpose }}
+        •
+        <span
+          class="badge ms-1"
+          [ngClass]="{
+            'bg-warning text-dark': r.status === 'PENDING',
+            'bg-success': r.status === 'ACCEPTED',
+            'bg-danger': r.status === 'DECLINED'
+          }">
+          {{ r.status }}
+        </span>
       </div>
     </div>
+
+    <!-- Right side -->
+    <div class="d-flex align-items-center gap-2">
+
+      <span class="fw-semibold">
+        {{ r.amount | currency:currency }}
+      </span>
+
+      <!-- Three Dot Dropdown (only if PENDING) -->
+      <div class="dropdown" *ngIf="r.status === 'PENDING'">
+        <button class="btn btn-sm btn-light"
+                type="button"
+                data-bs-toggle="dropdown">
+          ⋮
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+          <li>
+            <button class="dropdown-item text-success"
+                    (click)="acceptRequest(r)">
+              Accept
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item text-danger"
+                    (click)="declineRequest(r)">
+              Decline
+            </button>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
 
     <!-- Outgoing requests -->
     <div *ngSwitchCase="'outgoing'" class="card p-3">
