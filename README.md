@@ -2,7 +2,7 @@
 
 RevPay is a full-stack monolithic financial web application that enables secure digital payments and money management for both Personal and Business users.
 
-The platform allows users to send and request money, manage wallets and payment methods, track transactions, and receive real-time notifications through an intuitive web interface. Business users gain advanced capabilities including invoice management, loan applications, payment acceptance, and business analytics.
+The platform allows users to send and request money, manage wallets and payment methods, track transactions, and receive real-time notifications through an intuitive web interface. Business users gain advanced capabilities, including invoice management, loan applications, payment acceptance, and business analytics.
 
 The application implements robust security mechanisms, including JWT-based authentication, role-based access control (RBAC), encrypted passwords, transaction PIN verification, and protected REST APIs.
 
@@ -37,13 +37,13 @@ The application implements robust security mechanisms, including JWT-based authe
   - Email
   - Phone number
   - Account ID
-- Add optional note to transfers
+- Add an optional note to transfers
 - Real-time balance update
 
 ---
 
 ### 💰 Money Requests
-- Request money with amount and purpose
+- Request money with an amount and purpose
 - View incoming requests (Pending / Accepted / Declined)
 - Accept or decline requests
 - View outgoing requests
@@ -106,7 +106,7 @@ The application implements robust security mechanisms, including JWT-based authe
 ### 👤 Profile Management
 - Update profile information
 - Change password
-- Set / update transaction PIN
+- Set/update transaction PIN
 
 ---
 
@@ -226,3 +226,14 @@ Build Tools: Maven (Backend), Angular CLI (Frontend), Git (Version Control)
 - User Interface & Experience
 
 ---
+<img width="1916" height="964" alt="Image" src="https://github.com/user-attachments/assets/7ab34873-69be-4095-b1e8-2a58e561c102" />
+<img width="1917" height="969" alt="Image" src="https://github.com/user-attachments/assets/2cdd94ae-99ac-4734-99f6-f2312ec40c3c" />
+<img width="1917" height="970" alt="Image" src="https://github.com/user-attachments/assets/d8b61c25-57ae-4bde-a6f7-8d3906cdfc77" />
+<img width="1913" height="967" alt="Image" src="https://github.com/user-attachments/assets/e3e5ff0a-0f27-4516-b3f6-f2460a83aab5" />
+<img width="1918" height="971" alt="Image" src="https://github.com/user-attachments/assets/9485ae50-9aad-47e3-b1f7-d4dc8d6a588e" />
+<img width="1919" height="971" alt="Image" src="https://github.com/user-attachments/assets/067d8f5e-ff17-4176-8e09-4a77a749ac82" />
+<img width="1919" height="972" alt="Image" src="https://github.com/user-attachments/assets/7e93c731-fb7f-448d-b9bd-7c5a27ed01d5" />
+<img width="1685" height="1240" alt="Image" src="https://github.com/user-attachments/assets/ce3d883a-1198-4d2e-98dd-953a448731fe" />
+
+
+
