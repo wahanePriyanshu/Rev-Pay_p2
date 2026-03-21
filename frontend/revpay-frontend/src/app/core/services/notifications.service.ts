@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface NotificationItem {
@@ -12,9 +12,9 @@ export interface NotificationItem {
 }
 
 export interface NotificationPreferences {
-  emailEnabled: boolean;
-  smsEnabled: boolean;
-  pushEnabled: boolean;
+  TransactionAlert: boolean;
+  RequestAlert: boolean;
+  LowBalanceAlert: boolean;
 }
 
 @Injectable({
@@ -34,16 +34,9 @@ export class NotificationsService {
   }
 
   markAllRead(ids: number[]): Observable<any[]> {
-    return new Observable(observer => {
-      const requests = ids.map(id => this.markRead(id));
-      Promise.all(requests.map(r => r.toPromise()))
-        .then(results => {
-          observer.next(results);
-          observer.complete();
-        })
-        .catch(err => observer.error(err));
-    });
-  }
+  const requests = ids.map(id => this.markRead(id));
+  return forkJoin(requests);
+}
 
   getPreferences(): Observable<NotificationPreferences> {
     return this.http.get<NotificationPreferences>(`${this.API}/notification-preferences`);

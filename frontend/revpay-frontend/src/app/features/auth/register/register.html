@@ -1,70 +1,120 @@
-<div class="container">
-  <div class="card">
-    <h2 class="title">Sign up now</h2>
+<div class="register-page">
+  <div class="register-card">
+    <div class="form-header">
+      <p class="eyebrow">New account</p>
+      <h2 class="title">Sign up to RevPay</h2>
+      <p class="subtitle">Fill in your details and choose a secure transaction PIN.</p>
+    </div>
 
-    <form [formGroup]="regiForm" class="form" (ngSubmit)="submit()">
+    <form [formGroup]="regiForm" class="form" (ngSubmit)="submit()" autocomplete="off">
+      <div class="section">
+        <div class="section-title">Profile details</div>
 
-      <!-- Full Name -->
-      <input formControlName="fullName" type="text" placeholder="Enter full name" class="input" />
-      <div *ngIf="regiForm.controls['fullName'].invalid && regiForm.controls['fullName'].touched" class="error">
-        <small>Full name is required</small>
+        <div class="field-grid">
+          <div class="field">
+            <label class="field-label" for="fullName">Full name</label>
+            <input id="fullName" formControlName="fullName" type="text" placeholder="Enter full name" class="input" />
+            <div *ngIf="regiForm.controls['fullName'].invalid && regiForm.controls['fullName'].touched" class="error">
+              <small>Full name is required</small>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="phone">Phone number</label>
+            <input id="phone" formControlName="phone" type="text" placeholder="Enter phone number" class="input" />
+            <div *ngIf="regiForm.controls['phone'].invalid && regiForm.controls['phone'].touched" class="error">
+              <small>Phone is required</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="email">Email address</label>
+          <input id="email" formControlName="email" type="email" placeholder="Enter email" class="input" />
+          <div *ngIf="regiForm.controls['email'].invalid && regiForm.controls['email'].touched" class="error">
+            <small *ngIf="regiForm.controls['email'].errors?.['required']">Email is required</small>
+            <small *ngIf="regiForm.controls['email'].errors?.['email']">Invalid email</small>
+          </div>
+        </div>
       </div>
 
-      <!-- Email -->
-      <input formControlName="email" type="email" placeholder="Enter email" class="input" />
-      <div *ngIf="regiForm.controls['email'].invalid && regiForm.controls['email'].touched" class="error">
-        <small *ngIf="regiForm.controls['email'].errors?.['required']">Email is required</small>
-        <small *ngIf="regiForm.controls['email'].errors?.['email']">Invalid email</small>
-      </div>
+      <div class="section">
+        <div class="section-title">Account type</div>
 
-      <!-- Phone -->
-      <input formControlName="phone" type="text" placeholder="Enter phone number" class="input" />
-      <div *ngIf="regiForm.controls['phone'].invalid && regiForm.controls['phone'].touched" class="error">
-        <small>Phone is required</small>
-      </div>
-
-      <!-- Account Type -->
-      <div class="radio-group">
-        <label class="radio-label">Select Account Type</label>
-        <div class="radio-options">
-          <label>
+        <div class="account-options">
+          <label class="account-option" [class.account-option--active]="regiForm.value.role === 'ROLE_PERSONAL'">
             <input type="radio" formControlName="role" value="ROLE_PERSONAL" />
-            Personal
+            <span class="account-option__body">
+              <span class="account-option__title">Personal</span>
+              <span class="account-option__text">For wallet activity, transfers, and daily payments.</span>
+            </span>
           </label>
-          <label>
+
+          <label class="account-option" [class.account-option--active]="regiForm.value.role === 'ROLE_BUSINESS'">
             <input type="radio" formControlName="role" value="ROLE_BUSINESS" />
-            Business
+            <span class="account-option__body">
+              <span class="account-option__title">Business</span>
+              <span class="account-option__text">For customers, invoices, and business tools.</span>
+            </span>
           </label>
         </div>
+
         <div *ngIf="regiForm.controls['role'].invalid && regiForm.controls['role'].touched" class="error">
           <small>Account type is required</small>
         </div>
       </div>
 
-      <!-- Password -->
-      <input formControlName="password" type="password" placeholder="Choose a password" class="input" />
-      <div *ngIf="regiForm.controls['password'].invalid && regiForm.controls['password'].touched" class="error">
-        <small *ngIf="regiForm.controls['password'].errors?.['required']">Password is required</small>
-        <small *ngIf="regiForm.controls['password'].errors?.['minlength']">Minimum 6 characters</small>
+      <div class="section">
+        <div class="section-title">Security setup</div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label class="field-label" for="password">Password</label>
+            <input id="password" formControlName="password" type="password" placeholder="Choose a password" class="input" />
+            <div *ngIf="regiForm.controls['password'].invalid && regiForm.controls['password'].touched" class="error">
+              <small *ngIf="regiForm.controls['password'].errors?.['required']">Password is required</small>
+              <small *ngIf="regiForm.controls['password'].errors?.['minlength']">Minimum 6 characters</small>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="confirmPassword">Confirm password</label>
+            <input id="confirmPassword" formControlName="confirmPassword" type="password" placeholder="Confirm password" class="input" />
+            <div *ngIf="regiForm.controls['confirmPassword'].invalid && regiForm.controls['confirmPassword'].touched" class="error">
+              <small>Confirm password is required</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label class="field-label" for="transactionPin">Transaction PIN</label>
+            <input id="transactionPin" formControlName="transactionPin" type="password" placeholder="Set 4 to 6 digit PIN" class="input" />
+            <div *ngIf="regiForm.controls['transactionPin'].invalid && regiForm.controls['transactionPin'].touched" class="error">
+              <small *ngIf="regiForm.controls['transactionPin'].errors?.['required']">Transaction PIN is required</small>
+              <small *ngIf="regiForm.controls['transactionPin'].errors?.['pattern']">PIN must be 4 to 6 digits</small>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="confirmTransactionPin">Confirm PIN</label>
+            <input id="confirmTransactionPin" formControlName="confirmTransactionPin" type="password" placeholder="Confirm transaction PIN" class="input" />
+            <div *ngIf="regiForm.controls['confirmTransactionPin'].invalid && regiForm.controls['confirmTransactionPin'].touched" class="error">
+              <small>Confirm transaction PIN is required</small>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Confirm Password -->
-      <input formControlName="confirmPassword" type="password" placeholder="Confirm password" class="input" />
-      <div *ngIf="regiForm.controls['confirmPassword'].invalid && regiForm.controls['confirmPassword'].touched" class="error">
-        <small>Confirm password is required</small>
-      </div>
-
-      <!-- Button -->
       <button type="submit" class="btn" [disabled]="regiForm.invalid || loading">
-        <span *ngIf="!loading">Sign up</span>
+        <span *ngIf="!loading">Create account</span>
         <span *ngIf="loading" class="spinner-border spinner-border-sm"></span>
       </button>
 
-      <span class="login-text">
+      <p class="login-text">
         Already a member?
-        <a routerLink="/auth/login" class="link">Login Here</a>
-      </span>
-
+        <a routerLink="/auth/login" class="link">Login here</a>
+      </p>
     </form>
   </div>
 </div>

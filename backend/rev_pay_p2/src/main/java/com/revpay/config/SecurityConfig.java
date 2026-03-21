@@ -31,10 +31,12 @@ public class SecurityConfig {
                         "/api/health",
                         "/swagger-ui/**",
                         "/swagger-ui.html",
-                        "/v3/api-docs/**").permitAll()
+                        "/v3/api-docs/**",
+                        "/error").permitAll()
                 .requestMatchers("/api/transactions/**").authenticated()
                 .requestMatchers("/api/profile/**").authenticated()
                 .requestMatchers("/api/business/**").authenticated()
+                .requestMatchers("/api/users/**").authenticated()
                 .requestMatchers("/api/invoices/**").hasRole("BUSINESS")
                 .requestMatchers("/api/customers/**").hasRole("BUSINESS")
                 .requestMatchers("/api/loans/**").hasRole("BUSINESS")

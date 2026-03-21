@@ -1,4 +1,4 @@
-import { Component,EventEmitter,Output } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
@@ -16,26 +16,14 @@ export class NavbarComponent {
     public auth: AuthService
   ) {}
 
-  
-
   logout() {
     this.auth.logout();
     this.router.navigate(['/auth/login']);
-    this.router.navigate(['/login']);
   }
 
-@Output() toggleSidebarEvent = new EventEmitter<void>();
+  @Output() toggleSidebarEvent = new EventEmitter<void>();
 
   toggleSidebar() {
     this.toggleSidebarEvent.emit();
-
   }
-
-
-
-
-  
-
-
-
 }

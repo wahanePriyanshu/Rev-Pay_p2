@@ -1,0 +1,42 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: revpay_p2
+      MYSQL_USER: revuser
+      MYSQL_PASSWORD: revpass
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "revuser", "-prevpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend/rev_pay_p2
+    ports:
+      - "8082:8081"
+    environment:
+      SERVER_PORT: 8081
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/revpay_p2
+      SPRING_DATASOURCE_USERNAME: revuser
+      SPRING_DATASOURCE_PASSWORD: revpass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend/revpay-frontend
+    ports:
+      - "4201:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

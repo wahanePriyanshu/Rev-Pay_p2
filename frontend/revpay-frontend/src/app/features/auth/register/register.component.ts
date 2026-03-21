@@ -28,23 +28,31 @@ export class RegisterComponent {
       phone: ['', Validators.required],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
-      role: ['PERSONAL', Validators.required] // PERSONAL or BUSINESS
+      transactionPin: ['', [Validators.required, Validators.pattern(/^\d{4,6}$/)]],
+      confirmTransactionPin: ['', Validators.required],
+      role: ['ROLE_PERSONAL', Validators.required]
     });
   }
 
   submit() {
     if (this.regiForm.invalid) return;
 
-    const { password, confirmPassword, ...payload } = this.regiForm.value;
+    const { password, confirmPassword, transactionPin, confirmTransactionPin, ...payload } =
+      this.regiForm.value;
 
     if (password !== confirmPassword) {
       this.toast.show('Passwords do not match', 'error');
       return;
     }
 
+    if (transactionPin !== confirmTransactionPin) {
+      this.toast.show('Transaction PINs do not match', 'error');
+      return;
+    }
+
     this.loading = true;
 
-    this.auth.register({ ...payload, password }).subscribe({
+    this.auth.register({ ...payload, password, transactionPin }).subscribe({
       next: () => {
         this.loading = false;
         this.toast.show('Registration successful! Please login.', 'success');

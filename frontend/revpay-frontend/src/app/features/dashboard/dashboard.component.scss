@@ -11,6 +11,27 @@
     width: 40px;
     height: 40px;
     font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .recipient-list {
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  .recipient-list .list-group-item.active {
+    border-color: #0d6efd;
+  }
+
+  .selected-user {
+    padding: 0.85rem 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    background: #f8f9fa;
+  }
+
+  .transfer-form .btn {
+    min-height: 44px;
   }
 }
 

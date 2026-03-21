@@ -1,7 +1,12 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { WalletService } from '../../core/services/wallet.service';
 import { TransactionService, TransactionDto } from '../../core/services/transaction.service';
+import { TransferService } from '../../core/services/transfer.service';
+import { ToastService } from '../../core/services/toast.service';
+import { UserRecipient, UserService } from '../../core/services/user.service';
 
 interface UiTransaction {
   id: string;
@@ -12,16 +17,10 @@ interface UiTransaction {
   createdAt: string;
 }
 
-interface UserRecipient {
-  id: number;
-  name: string;
-  avatarColor: string;
-}
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -40,6 +39,7 @@ export class DashboardComponent implements OnInit {
 
   private transactionsSignal = signal<UiTransaction[]>([]);
   transactions = computed(() => this.transactionsSignal());
+  recentTransactions = computed(() => this.transactionsSignal().slice(0, 5));
 
   private totalReceivedSignal = signal<number>(0);
   totalReceivedLast30 = computed(() => this.totalReceivedSignal());
@@ -47,24 +47,36 @@ export class DashboardComponent implements OnInit {
   private totalSentSignal = signal<number>(0);
   totalSentLast30 = computed(() => this.totalSentSignal());
 
-  /* ========================= */
+  private recipientsSignal = signal<UserRecipient[]>([]);
+  recipients = computed(() => this.recipientsSignal());
 
-  favoriteUsers: UserRecipient[] = [
-    { id: 1, name: 'Alice', avatarColor: '#4e73df' },
-    { id: 2, name: 'Bob', avatarColor: '#1cc88a' },
-    { id: 3, name: 'Charlie', avatarColor: '#36b9cc' },
-    { id: 4, name: 'Diana', avatarColor: '#f6c23e' }
-  ];
+  recipientSearch = '';
+  recipientsLoading = false;
+  walletLoading = false;
+  transactionsLoading = false;
+  isSubmittingTransfer = false;
+  transferError = '';
+
+  transferForm = {
+    recipientId: null as number | null,
+    amount: null as number | null,
+    pin: '',
+    note: ''
+  };
 
   constructor(
     private walletService: WalletService,
-    private transactionService: TransactionService
+    private transactionService: TransactionService,
+    private transferService: TransferService,
+    private userService: UserService,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
     this.loadUserFromToken();
     this.loadWalletBalance();
     this.loadTransactions();
+    this.loadRecipients();
   }
 
   /* =========================
@@ -93,9 +105,15 @@ export class DashboardComponent implements OnInit {
   ========================== */
 
   private loadWalletBalance(): void {
+    this.walletLoading = true;
     this.walletService.getBalance().subscribe({
       next: res => {
         this.walletBalanceSignal.set(res.balance);
+        this.walletLoading = false;
+      },
+      error: () => {
+        this.walletLoading = false;
+        this.toast.show('Unable to load wallet balance right now.', 'error');
       }
     });
   }
@@ -105,9 +123,9 @@ export class DashboardComponent implements OnInit {
   ========================== */
 
   private loadTransactions(): void {
+    this.transactionsLoading = true;
     this.transactionService.getMyTransactions().subscribe({
       next: res => {
-
         const mapped: UiTransaction[] = res.map((tx: TransactionDto) => ({
           id: `#TXN-${tx.id}`,
           date: new Date(tx.createdAt).toLocaleString(),
@@ -119,6 +137,26 @@ export class DashboardComponent implements OnInit {
 
         this.transactionsSignal.set(mapped);
         this.computeTotals();
+        this.transactionsLoading = false;
+      },
+      error: () => {
+        this.transactionsLoading = false;
+        this.toast.show('Unable to load recent transactions.', 'error');
+      }
+    });
+  }
+
+  private loadRecipients(): void {
+    this.recipientsLoading = true;
+
+    this.userService.getRecipients().subscribe({
+      next: users => {
+        this.recipientsSignal.set(users);
+        this.recipientsLoading = false;
+      },
+      error: () => {
+        this.recipientsLoading = false;
+        this.toast.show('Unable to load available recipients.', 'error');
       }
     });
   }
@@ -186,7 +224,21 @@ export class DashboardComponent implements OnInit {
     }).format(this.totalSentLast30());
   }
 
-  /* ========================= */
+  get selectedRecipient(): UserRecipient | undefined {
+    return this.recipients().find(user => user.id === this.transferForm.recipientId);
+  }
+
+  get filteredRecipients(): UserRecipient[] {
+    const query = this.recipientSearch.trim().toLowerCase();
+
+    if (!query) {
+      return this.recipients();
+    }
+
+    return this.recipients().filter(user =>
+      user.name.toLowerCase().includes(query) || user.email.toLowerCase().includes(query)
+    );
+  }
 
   getInitials(name: string): string {
     return name
@@ -196,7 +248,55 @@ export class DashboardComponent implements OnInit {
       .toUpperCase();
   }
 
-  onSendMoney(user: UserRecipient) {
-    console.log('Send money to', user.name);
+  selectRecipient(user: UserRecipient): void {
+    this.transferForm.recipientId = user.id;
+    this.transferError = '';
+  }
+
+  submitTransfer(): void {
+    const recipient = this.selectedRecipient;
+    const amount = Number(this.transferForm.amount);
+    const pin = this.transferForm.pin.trim();
+    const note = this.transferForm.note.trim();
+
+    if (!recipient) {
+      this.transferError = 'Choose a recipient before sending money.';
+      return;
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      this.transferError = 'Enter a valid amount greater than zero.';
+      return;
+    }
+
+    if (!pin) {
+      this.transferError = 'Enter your transaction PIN.';
+      return;
+    }
+
+    this.isSubmittingTransfer = true;
+    this.transferError = '';
+
+    this.transferService.send({
+      to: recipient.email,
+      amount,
+      note: note || 'Dashboard transfer',
+      pin
+    }).subscribe({
+      next: () => {
+        this.isSubmittingTransfer = false;
+        this.transferForm.amount = null;
+        this.transferForm.pin = '';
+        this.transferForm.note = '';
+        this.loadWalletBalance();
+        this.loadTransactions();
+        this.toast.show(`Money sent to ${recipient.name} successfully.`, 'success');
+      },
+      error: err => {
+        this.isSubmittingTransfer = false;
+        this.transferError = err?.error?.message || 'Transfer failed. Please try again.';
+        this.toast.show(this.transferError, 'error');
+      }
+    });
   }
 }

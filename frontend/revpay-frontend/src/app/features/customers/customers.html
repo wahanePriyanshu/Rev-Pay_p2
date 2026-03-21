@@ -1,0 +1,47 @@
+<div class="customers-page">
+  <h2>Customers</h2>
+
+  <!-- Add Customer -->
+  <div class="card p-3 mb-3">
+    <h5>Add Customer</h5>
+    <div class="row g-2">
+      <div class="col">
+        <input class="form-control"
+               placeholder="Name"
+               [(ngModel)]="newCustomer.name">
+      </div>
+      <div class="col">
+        <input class="form-control"
+               placeholder="Email"
+               [(ngModel)]="newCustomer.email">
+      </div>
+      <!-- <div class="col">
+        <input class="form-control"
+               placeholder="Phone"
+               [(ngModel)]="newCustomer.phone">
+      </div> -->
+      <div class="col-auto">
+        <button class="btn btn-primary" (click)="addCustomer()">
+          Add
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer List -->
+  <div class="card">
+    <ul class="list-group list-group-flush">
+      <li *ngFor="let c of customers"
+          class="list-group-item d-flex justify-content-between">
+        <div>
+          <strong>{{ c.name }}</strong><br>
+          <small>{{ c.email }} </small>
+        </div>
+        <button class="btn btn-sm btn-danger"
+                (click)="deleteCustomer(c.id)">
+          Delete
+        </button>
+      </li>
+    </ul>
+  </div>
+</div>

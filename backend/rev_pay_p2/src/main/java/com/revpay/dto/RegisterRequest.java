@@ -6,6 +6,7 @@ public class RegisterRequest {
     private String email;
     private String phone;
     private String password;
+    private String transactionPin;
     private String role; // ROLE_PERSONAL or ROLE_BUSINESS
 
     // Getters & Setters
@@ -24,6 +25,10 @@ public class RegisterRequest {
     public String getPassword() { return password; }
     public void setPassword(String password) 
     { this.password = password; }
+
+    public String getTransactionPin() { return transactionPin; }
+    public void setTransactionPin(String transactionPin)
+    { this.transactionPin = transactionPin; }
 
     public String getRole() { return role; }
     public void setRole(String role) 

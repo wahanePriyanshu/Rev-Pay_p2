@@ -27,6 +27,9 @@ export class CustomerService {
   getCustomers(): Observable<CustomerDto[]> {
     return this.http.get<CustomerDto[]>(`${this.API}/customers`);
   }
+  getById(id: number): Observable<CustomerDto> {
+    return this.http.get<CustomerDto>(`${this.API}/customers/${id}`);
+  }
 
   createCustomer(payload: CreateCustomerPayload): Observable<CustomerDto> {
     return this.http.post<CustomerDto>(`${this.API}/customers`, payload);

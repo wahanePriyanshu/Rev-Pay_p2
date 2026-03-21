@@ -84,12 +84,13 @@ public class WalletServiceImpl implements WalletService {
 
 
     @Override
-    public Wallet addMoney(BigDecimal amount) {
+    public Wallet addMoney(BigDecimal amount, String pin) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Amount must be greater than zero");
         }
 
         User user = getCurrentUser();
+        verifyTransactionPin(user, pin);
         Wallet wallet = walletRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
 

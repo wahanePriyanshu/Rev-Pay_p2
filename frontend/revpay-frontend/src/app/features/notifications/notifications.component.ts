@@ -17,9 +17,9 @@ export class NotificationsComponent implements OnInit {
 
   notifications: NotificationItem[] = [];
   preferences: NotificationPreferences = {
-    emailEnabled: true,
-    smsEnabled: false,
-    pushEnabled: true
+    TransactionAlert: true,
+    RequestAlert: false,
+    LowBalanceAlert: true
   };
 
   loading = false;
@@ -49,6 +49,26 @@ export class NotificationsComponent implements OnInit {
       }
     });
   }
+
+
+  markOneRead(notification: NotificationItem) {
+
+  if (notification.read) return;
+
+  this.notificationsService.markRead(notification.id).subscribe({
+    next: () => {
+      notification.read = true;
+    },
+    error: () => {
+      this.error = 'Failed to mark notification as read';
+    }
+  });
+}
+
+
+
+
+
 
   private loadPreferences() {
     this.notificationsService.getPreferences().subscribe({

@@ -7,7 +7,7 @@ import com.revpay.entity.Wallet;
 public interface WalletService {
     Wallet getMyWallet(String username);
    
-    Wallet addMoney(BigDecimal amount);
+    Wallet addMoney(BigDecimal amount, String pin);
     
     Wallet withdrawMoney(BigDecimal amount,String pin);
     

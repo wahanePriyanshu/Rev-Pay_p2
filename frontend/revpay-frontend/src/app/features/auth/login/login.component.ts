@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { RouterModule } from '@angular/router';
@@ -40,9 +41,17 @@ export class LoginComponent {
         this.toast.show('Login successful!', 'success');
         this.router.navigate(['/']);
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         this.loading = false;
-        this.toast.show('Invalid credentials', 'error');
+        const message =
+          typeof error.error?.message === 'string'
+            ? error.error.message
+            : typeof error.error?.detail === 'string'
+              ? error.error.detail
+            : error.status === 401
+              ? 'Invalid email/phone or password'
+              : 'Unable to log in right now';
+        this.toast.show(message, 'error');
       }
     });
   }

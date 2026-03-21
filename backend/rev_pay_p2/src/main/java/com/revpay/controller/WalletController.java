@@ -48,7 +48,7 @@ public class WalletController {
     //POST /api/wallet/add/
     @PostMapping("/add")
     public ResponseEntity<?> addMoney(@RequestBody AddMoneyRequest request) {
-        Wallet wallet = walletService.addMoney(request.getAmount());
+        Wallet wallet = walletService.addMoney(request.getAmount(), request.getPin());
         return ResponseEntity.ok(new WalletResponse(wallet.getId(), wallet.getBalance()));
     }
 

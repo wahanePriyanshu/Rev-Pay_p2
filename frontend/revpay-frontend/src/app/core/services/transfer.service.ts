@@ -20,6 +20,9 @@ export interface SendMoneyResponse {
   providedIn: 'root'
 })
 export class TransferService {
+  // sendMoney(payload: { receiverEmail: string; amount: number; note: string; }) {
+  //   throw new Error('Method not implemented.');
+  // }
   private readonly API = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) {}

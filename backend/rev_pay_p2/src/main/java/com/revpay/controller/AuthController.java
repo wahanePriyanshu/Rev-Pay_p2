@@ -3,11 +3,13 @@ package com.revpay.controller;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,11 +57,15 @@ public class AuthController {
 	@PostMapping("/login")
 	public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
 
-		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(request.getEmailOrPhone(), request.getPassword()));
+		try {
+			authenticationManager.authenticate(
+					new UsernamePasswordAuthenticationToken(request.getEmailOrPhone(), request.getPassword()));
+		} catch (BadCredentialsException ex) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email/phone or password");
+		}
 
 		User user = userRepository.findByEmailOrPhone(request.getEmailOrPhone(), request.getEmailOrPhone())
-				.orElseThrow(() -> new RuntimeException("User not found"));
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email/phone or password"));
 
 		String token = jwtUtil.generateToken(user);
 
@@ -89,6 +95,7 @@ public class AuthController {
 		user.setEmail(request.getEmail());
 		user.setPhone(request.getPhone());
 		user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+		user.setTransactionPin(passwordEncoder.encode(validateAndNormalizePin(request.getTransactionPin())));
 		user.setIsActive(true);
 
 		// 3. Assign Role
@@ -132,5 +139,13 @@ public class AuthController {
 		walletRepository.save(wallet);
 
 		return Map.of("message", "User registered successfully");
+	}
+
+	private String validateAndNormalizePin(String pin) {
+		if (pin == null || !pin.matches("\\d{4,6}")) {
+			throw new RuntimeException("Transaction PIN must be 4 to 6 digits");
+		}
+
+		return pin;
 	}
 }

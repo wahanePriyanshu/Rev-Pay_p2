@@ -156,7 +156,7 @@
         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
           <li>
             <button class="dropdown-item text-success"
-                    (click)="acceptRequest(r)">
+                    (click)="openPinModal(r)">
               Accept
             </button>
           </li>
@@ -168,9 +168,17 @@
           </li>
         </ul>
       </div>
+      
 
     </div>
   </div>
+
+
+
+
+
+
+  
 </div>
 
     <!-- Outgoing requests -->
@@ -193,5 +201,46 @@
       <p class="text-muted">Choose an action above to manage your wallet.</p>
     </div>
   </div>
+<!-- PIN Modal -->
+<div class="modal fade show"
+     tabindex="-1"
+     *ngIf="showPinModal"
+     style="display:block; background: rgba(0,0,0,0.5);">
+
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Enter Transaction PIN</h5>
+        <button type="button" class="btn-close"
+                (click)="closePinModal()"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="password"
+               class="form-control"
+               placeholder="Enter PIN"
+               [(ngModel)]="pinInput">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary"
+                (click)="closePinModal()">Cancel</button>
+
+        <button class="btn btn-primary"
+                (click)="confirmAccept()">
+          Confirm
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
 </div>
 

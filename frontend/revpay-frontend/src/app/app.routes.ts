@@ -11,6 +11,7 @@ import { ProfileComponent } from './features/profile/profile.component';
 import { BusinessComponent } from './features/business/business.component';
 import { InvoicesComponent } from './features/invoices/invoices.component';
 import { LoansComponent } from './features/loans/loans.component';
+import { Customers } from './features/customers/customers';
 
 export const routes: Routes = [
   {
@@ -61,6 +62,11 @@ export const routes: Routes = [
       {
         path: 'loans',
         component: LoansComponent,
+        runGuardsAndResolvers: 'always'
+      },
+      {
+        path: 'customers',
+        component: Customers,
         runGuardsAndResolvers: 'always'
       }
       // later: user, business, admin dashboards here
