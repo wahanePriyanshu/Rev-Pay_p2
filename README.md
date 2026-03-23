@@ -8,6 +8,17 @@ The application implements robust security mechanisms, including JWT-based authe
 
 ---
 
+
+## 🌐 Live Application
+
+🚀 The application is deployed and accessible online:
+
+- Frontend: http://13.60.88.223:4201  
+- Backend: http://13.60.88.223:8081  
+
+---
+
+
 # ✨ Key Features
 
 ---
